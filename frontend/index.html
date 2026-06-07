@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>故事创作助手 v3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f0f2f5;color:#333;min-height:100vh}
+.app{max-width:1200px;margin:0 auto;padding:12px}
+.header{text-align:center;padding:14px 0 8px}
+.header h1{font-size:20px;color:#1a1a2e}
+.header p{font-size:12px;color:#999}
+
+/* Story Bar */
+.story-bar{display:none;background:white;border-radius:8px;padding:8px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);align-items:center;flex-wrap:wrap;gap:4px}
+.story-bar.show{display:flex}
+.sb-title{font-weight:600;font-size:14px}
+.sb-badge{padding:1px 7px;border-radius:6px;font-size:11px;background:#eef0ff;color:#6c63ff}
+.sb-char{font-size:11px;color:#666;padding:1px 5px;background:#f3f4f6;border-radius:3px}
+.sb-stats{font-size:11px;color:#999;margin-left:auto}
+
+/* Workspace */
+.workspace{display:none;gap:10px}
+.workspace.show{display:grid;grid-template-columns:280px 1fr;align-items:start}
+@media(max-width:860px){.workspace.show{grid-template-columns:1fr}}
+
+/* Left panel */
+.left-panel{background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+.tab-bar{display:flex;border-bottom:1px solid #e5e7eb}
+.tab-btn{flex:1;padding:7px 0;text-align:center;font-size:12px;cursor:pointer;border:none;background:white;color:#888;font-family:inherit;border-bottom:2px solid transparent}
+.tab-btn:hover{color:#333}
+.tab-btn.active{color:#6c63ff;border-bottom-color:#6c63ff;font-weight:500}
+.tab-body{padding:8px;max-height:calc(100vh-170px);overflow-y:auto}
+.tab-body.hidden{display:none}
+
+/* Right Panel — base */
+.right-panel{background:white;border-radius:8px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);min-height:200px}
+.rp-section{display:none}
+.rp-section.active{display:block}
+
+/* ===== Shared ===== */
+.item{padding:6px 8px;margin-bottom:3px;border:1px solid #e5e7eb;border-radius:5px;cursor:pointer;font-size:13px;transition:all .12s;display:flex;align-items:center;gap:6px}
+.item:hover{border-color:#6c63ff}
+.item.active{border-color:#6c63ff;background:#eef0ff}
+.item .cb{width:16px;height:16px;cursor:pointer;flex-shrink:0}
+.item .label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .tag{font-size:10px;padding:1px 5px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.tag.draft{background:#e5e7eb;color:#6b7280}
+.tag.first_pass{background:#dbeafe;color:#1d4ed8}
+.tag.revising{background:#fef3c7;color:#92400e}
+.tag.review{background:#f3e8ff;color:#7c3aed}
+.tag.published{background:#d1fae5;color:#065f46}
+.tag.sub{background:#f3f4f6;color:#999;font-size:9px}
+.item .del{color:#ccc;cursor:pointer;font-size:13px;padding:0 2px;flex-shrink:0}
+.item .del:hover{color:#ef4444}
+.sub-item{padding-left:28px}
+.sub-item .label{font-size:12px;color:#666}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:3px;padding:6px 14px;border:none;border-radius:5px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-p{background:#6c63ff;color:white}
+.btn-p:hover{background:#5a52e0}
+.btn-s{background:#f3f4f6;color:#333;border:1px solid #e5e7eb}
+.btn-s:hover{background:#e5e7eb}
+.btn-xs{padding:3px 8px;font-size:11px}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-gap{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.pbtn{padding:3px 8px;border:1px solid #e5e7eb;border-radius:10px;background:white;cursor:pointer;font-size:11px;font-family:inherit}
+.pbtn:hover{background:#f3f4f6;border-color:#6c63ff}
+.pbtn.active{background:#6c63ff;color:white;border-color:#6c63ff}
+
+/* Stage bar */
+.stage-bar{display:flex;align-items:center;gap:4px;padding:5px 0;flex-wrap:wrap;border-top:1px solid #f3f4f6;margin-top:6px;padding-top:6px}
+.stage-bar .sl{font-size:12px;color:#666}
+
+/* Input row */
+.input-row{display:flex;gap:4px;margin-bottom:6px}
+.input-row input{flex:1;padding:7px 10px;border:2px solid #e5e7eb;border-radius:5px;font-size:13px;font-family:inherit}
+.input-row input:focus{outline:none;border-color:#6c63ff}
+
+/* Mode tabs */
+.mode-tabs{display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap}
+.mt{font-size:11px;padding:4px 10px;border:1px solid #e5e7eb;border-radius:4px;background:white;cursor:pointer;font-family:inherit}
+.mt:hover{border-color:#6c63ff;color:#6c63ff}
+.mt.active{background:#6c63ff;color:white;border-color:#6c63ff}
+
+/* Scard for suggestions */
+.scard{display:block;width:100%;padding:7px 10px;margin-bottom:3px;background:#fffbeb;border:1px solid #fde68a;border-radius:5px;cursor:pointer;text-align:left;font-size:12px;font-family:inherit}
+.scard:hover{background:#fef3c7;border-color:#f59e0b;transform:translateX(2px)}
+
+/* Outline */
+.ol-item{padding:6px 10px;margin-bottom:3px;border-left:3px solid #6c63ff;background:#f8f9ff;border-radius:0 4px 4px 0;font-size:13px}
+.ol-item .ol-title{font-weight:500}
+.ol-item .ol-summary{color:#888;font-size:12px;margin-top:2px}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#e5e7eb}
+.tl-item{position:relative;padding:6px 0 6px 12px;margin-bottom:4px}
+.tl-item::before{content:'';position:absolute;left:-18px;top:10px;width:10px;height:10px;border-radius:50%;background:#6c63ff;border:2px solid white;box-shadow:0 0 0 2px #6c63ff}
+.tl-item .tl-title{font-size:13px;font-weight:500}
+.tl-item .tl-desc{font-size:11px;color:#888}
+
+/* Prose box */
+.prose-box{min-height:130px;padding:12px 14px;background:#fafafa;border:1px solid #e5e7eb;border-radius:6px;line-height:1.8;font-size:14px;white-space:pre-wrap;margin-bottom:6px}
+.prose-box.empty{color:#bbb;display:flex;align-items:center;justify-content:center;font-size:13px}
+
+/* ===== Panel-specific themes ===== */
+/* Draft Panel — warm notebook style */
+.rp-draft-panel .rp-header{background:linear-gradient(135deg,#fef3c7,#ffedd5);border-radius:8px;padding:12px;margin-bottom:10px}
+.rp-draft-panel .rp-header h3{font-size:14px;color:#92400e}
+.rp-draft-panel .rp-header p{font-size:11px;color:#b45309}
+.rp-draft-panel .draft-toolbar{display:flex;gap:4px;flex-wrap:wrap;border-top:1px solid #fef3c7;padding-top:6px;margin-top:6px}
+.rp-draft-panel .draft-toolbar .btn{font-size:11px}
+
+/* Beat Panel — structural blue */
+.rp-beat-panel .rp-header{background:linear-gradient(135deg,#dbeafe,#e0e7ff);border-radius:8px;padding:12px;margin-bottom:10px}
+.rp-beat-panel .rp-header h3{font-size:14px;color:#1e40af}
+.rp-beat-panel .rp-header p{font-size:11px;color:#3b82f6}
+.rp-beat-panel .beat-toolbar{display:flex;gap:4px;flex-wrap:wrap;border-top:1px solid #e0e7ff;padding-top:6px;margin-top:6px}
+.rp-beat-panel .beat-toolbar .btn{font-size:11px}
+
+/* Chapter Panel — creative purple */
+.rp-chapter-panel .rp-header{background:linear-gradient(135deg,#f3e8ff,#ede9fe);border-radius:8px;padding:12px;margin-bottom:10px}
+.rp-chapter-panel .rp-header h3{font-size:14px;color:#6d28d9}
+.rp-chapter-panel .rp-header p{font-size:11px;color:#8b5cf6}
+
+/* Outline Panel — overview emerald */
+.rp-outline-panel .rp-header{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:8px;padding:12px;margin-bottom:10px}
+.rp-outline-panel .rp-header h3{font-size:14px;color:#065f46}
+.rp-outline-panel .rp-header p{font-size:11px;color:#059669}
+.rp-outline-panel .outline-toolbar{display:flex;gap:4px;flex-wrap:wrap;border-top:1px solid #d1fae5;padding-top:6px;margin-top:6px}
+.rp-outline-panel .outline-toolbar .btn{font-size:11px}
+
+/* Character Panel — pink theme */
+.rp-character-panel .rp-header{border-radius:8px;padding:12px;margin-bottom:10px}
+.rp-character-panel .rp-header h3{font-size:14px}
+.rp-character-panel .rp-header p{font-size:11px}
+
+/* AI result box */
+.ai-result{background:#f8f9ff;border:1px solid #e0e7ff;border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.7;white-space:pre-wrap;margin-top:6px;display:none;max-height:200px;overflow-y:auto}
+.ai-result.show{display:block}
+
+/* Beat detail */
+.beat-detail .bd-field{font-size:12px;color:#888;margin-bottom:4px}
+.beat-detail .bd-field strong{color:#555}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.35);z-index:100;justify-content:center;align-items:center}
+.modal-overlay.show{display:flex}
+.modal{background:white;border-radius:12px;padding:18px;max-width:420px;width:90%;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:14px;margin-bottom:8px}
+.modal input,.modal textarea{width:100%;padding:7px 10px;border:2px solid #e5e7eb;border-radius:5px;font-size:13px;font-family:inherit;margin-bottom:6px}
+.modal input:focus,.modal textarea:focus{outline:none;border-color:#6c63ff}
+
+/* Helpers */
+.spin{display:inline-block;width:12px;height:12px;border:2px solid #e5e7eb;border-top-color:#6c63ff;border-radius:50%;animation:s .7s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.flex{display:flex}
+.gap-4{gap:4px}
+.mt-6{margin-top:6px}
+.mb-6{margin-bottom:6px}
+.text-sm{font-size:12px;color:#888}
+.text-xs{font-size:11px;color:#999}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-full{width:100%}
+</style></head><body>
+<div class="app" id="app">
+<div class="header"><h1>📖 故事创作助手</h1><p>草稿 → 节拍 → 章节 → 大纲</p></div>
+
+<!-- ====== Create ====== -->
+<div id="step-create" style="max-width:560px;margin:0 auto">
+<div style="background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+<div style="font-weight:600;margin-bottom:10px">✍️ 写下你的故事想法</div>
+<textarea id="raw-input" style="width:100%;min-height:120px;padding:10px 14px;border:2px solid #e5e7eb;border-radius:6px;font-size:14px;line-height:1.6;font-family:inherit;resize:vertical" placeholder="把你脑中的故事写下来...&#10;&#10;可以是一段剧情、几个关键词、一个场景或角色设定&#10;怎么写都行，不用讲究格式"></textarea>
+<div class="btn-gap"><button class="btn btn-p" onclick="createStory()">✨ 帮我理清思路</button></div>
+<div id="confirm-area" class="hidden mt-6" style="border-top:1px solid #e5e7eb;padding-top:10px">
+<div id="confirm-html"></div>
+<div id="questions-html" class="mt-6"></div>
+<div class="btn-gap">
+<button class="btn btn-p" onclick="startWriting()" style="background:#10b981">✅ 没错，开始写吧！</button>
+<button class="btn btn-s" onclick="showRefine()">✏️ 补充</button>
+<button class="btn btn-s" onclick="resetAll()">🔄 重新来</button>
+</div>
+<div id="refine-area" class="hidden mt-6" style="border-top:1px solid #e5e7eb;padding-top:8px">
+  <div style="font-weight:500;font-size:13px;margin-bottom:6px">❓ AI 想了解一些细节：</div>
+  <div id="refine-questions" style="margin-bottom:6px"><span class="spin"></span> 生成追问中...</div>
+  <textarea id="refine-input" style="width:100%;min-height:50px;padding:8px;border:2px solid #e5e7eb;border-radius:5px;font-size:13px;font-family:inherit" placeholder="或者直接在这里补充..."></textarea>
+  <div class="btn-gap" style="margin-top:4px">
+    <button class="btn btn-p btn-sm" onclick="refineStory()">回答 / 确认补充</button>
+    <button class="btn btn-s btn-sm" onclick="generateMoreQuestions()">🤔 换一批问题</button>
+  </div>
+</div>
+</div></div></div>
+
+<!-- ====== Story Bar ====== -->
+<div class="story-bar" id="sbar">
+<span class="sb-title" id="sb-title"></span><span class="sb-badge" id="sb-genre"></span>
+<span class="sb-char" id="sb-chars"></span>
+<span class="sb-stats" id="sb-stats"></span>
+<button class="btn btn-xs btn-s" onclick="resetAll()">✏️ 新故事</button>
+</div>
+
+<!-- ====== Workspace ====== -->
+<div class="workspace" id="workspace">
+<!-- Left Panel -->
+<div class="left-panel">
+<div class="tab-bar">
+<button class="tab-btn active" data-tab="drafts" onclick="switchTab(this)">📥 草稿</button>
+<button class="tab-btn" data-tab="beats" onclick="switchTab(this)">📅 节拍</button>
+<button class="tab-btn" data-tab="chapters" onclick="switchTab(this)">📖 章节</button>
+<button class="tab-btn" data-tab="outline" onclick="switchTab(this)">📋 大纲</button>
+<button class="tab-btn" data-tab="characters" onclick="switchTab(this)">👥 角色</button>
+</div>
+<div class="tab-body" id="tab-drafts">
+<div class="btn-gap mb-6"><button class="btn btn-xs btn-s" onclick="showAddDraft()">➕ 新建</button><span style="flex:1"></span><button class="btn btn-xs btn-p" onclick="genBeatsFromDrafts()" id="btn-gen-beats">📅 生成节拍</button></div>
+<div id="draft-list"></div>
+</div>
+<div class="tab-body hidden" id="tab-beats">
+<div class="btn-gap mb-6"><button class="btn btn-xs btn-s" onclick="showAddBeat()">➕ 添加</button><span style="flex:1"></span><button class="btn btn-xs btn-p" onclick="genChapterFromBeats()" id="btn-gen-ch">📖 生成章节</button></div>
+<div id="beat-list"></div>
+</div>
+<div class="tab-body hidden" id="tab-chapters">
+<div class="btn-gap mb-6"><button class="btn btn-xs btn-s" onclick="showAddChapter()">➕ 添加</button></div>
+<div id="chapter-list"></div>
+</div>
+<div class="tab-body hidden" id="tab-outline">
+<div class="btn-gap mb-6">
+<button class="btn btn-xs btn-p" onclick="updateOutline()">🔄 更新</button>
+<button class="btn btn-xs btn-s" onclick="toggleTimeline()" id="btn-tl">📅 时间线</button>
+</div>
+<div id="outline-view"></div>
+</div>
+<div class="tab-body hidden" id="tab-characters">
+<div class="btn-gap mb-6"><button class="btn btn-xs btn-s" onclick="showAddCharacter()">➕ 添加角色</button><span style="flex:1"></span><button class="btn btn-xs btn-s" onclick="refreshCharacters()">🔄 刷新</button></div>
+<div id="character-list"></div>
+</div>
+</div>
+
+<!-- ====== Right Panel ====== -->
+<div class="right-panel" id="right-panel">
+
+<!-- ====== 📥 草稿面板：自由写作 ====== -->
+<div class="rp-section active rp-draft-panel" id="rp-drafts">
+  <div class="rp-header">
+    <h3>✍️ 自由写作</h3>
+    <p>写下任何想法，不要考虑格式。这里是你的创意空间。</p>
+  </div>
+  <!-- Empty state -->
+  <div id="rp-draft-empty" style="text-align:center;padding:30px 10px;color:#bbb;font-size:13px">
+    <div style="font-size:36px;margin-bottom:6px">📝</div>
+    <div>点击左侧草稿开始编辑</div>
+    <div style="font-size:11px;color:#ddd;margin-top:4px">或新建草稿，自由书写你的故事</div>
+  </div>
+  <!-- Editor -->
+  <div id="rp-draft-editor" class="hidden">
+    <input id="rp-draft-title" placeholder="草稿标题（可选）" style="width:100%;padding:6px 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:13px;font-family:inherit;margin-bottom:6px">
+    <span id="rp-draft-id" style="display:none"></span>
+    <textarea id="rp-draft-content" placeholder="写你的故事内容..." style="width:100%;min-height:180px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;line-height:1.7"></textarea>
+    <div class="btn-gap">
+      <button class="btn btn-p btn-sm" onclick="saveRpDraft()">💾 保存</button>
+      <button class="btn btn-xs btn-s" onclick="deleteRpDraft()">🗑️ 删除</button>
+    </div>
+    <!-- Draft AI toolbar -->
+    <div class="draft-toolbar">
+      <button class="btn btn-xs btn-s" onclick="panelAi('draft_continue')">✍️ 续写思路</button>
+      <button class="btn btn-xs btn-s" onclick="panelAi('draft_brainstorm')">🌪️ 脑暴扩展</button>
+      <button class="btn btn-xs btn-s" onclick="panelAi('draft_extract')">🔍 提炼核心</button>
+      <button class="btn btn-xs btn-s" onclick="showDraftRewrite()">📝 改写润色</button>
+    </div>
+    <div id="ai-result-draft" class="ai-result"></div>
+  </div>
+</div>
+
+<!-- ====== 📅 节拍面板：结构规划 ====== -->
+<div class="rp-section rp-beat-panel" id="rp-beats">
+  <div class="rp-header">
+    <h3>📐 结构规划</h3>
+    <p>分析故事的节奏、逻辑和完整性。点击节拍查看详情。</p>
+  </div>
+  <div id="rp-beat-empty" style="text-align:center;padding:30px 10px;color:#bbb;font-size:13px">
+    <div style="font-size:36px;margin-bottom:6px">📅</div>
+    <div>点击左侧节拍查看详情</div>
+    <div style="font-size:11px;color:#ddd;margin-top:4px">或从草稿生成节拍板</div>
+  </div>
+  <div id="rp-beat-detail" class="hidden">
+    <div style="font-weight:600;font-size:14px;margin-bottom:6px" id="rp-beat-title"></div>
+    <div class="bd-field" id="rp-beat-desc"><strong>描述：</strong><span></span></div>
+    <div class="bd-field" id="rp-beat-loc"><strong>地点：</strong><span></span></div>
+    <div class="bd-field" id="rp-beat-chars"><strong>角色：</strong><span></span></div>
+    <div class="bd-field" id="rp-beat-type"><strong>类型：</strong><span></span></div>
+    <!-- Beat AI toolbar -->
+    <div class="beat-toolbar">
+      <button class="btn btn-xs btn-s" onclick="panelAi('beat_pacing')">🎯 节奏分析</button>
+      <button class="btn btn-xs btn-s" onclick="panelAi('beat_check')">🔍 逻辑检查</button>
+      <button class="btn btn-xs btn-s" onclick="showBeatFill()">🧩 补充节拍</button>
+    </div>
+    <div id="ai-result-beat" class="ai-result"></div>
+  </div>
+</div>
+
+<!-- ====== 📖 章节面板：创作 ====== -->
+<div class="rp-section rp-chapter-panel" id="rp-chapters">
+  <div class="rp-header">
+    <h3>✍️ 正文创作</h3>
+    <p>选择章节，用 AI 辅助写作。</p>
+  </div>
+  <div id="rp-ch-empty" style="text-align:center;padding:30px 10px;color:#bbb;font-size:13px">
+    <div style="font-size:36px;margin-bottom:6px">✍️</div>
+    <div>点击左侧章节开始写作</div>
+    <div style="font-size:11px;color:#ddd;margin-top:4px">或从节拍生成新章节</div>
+  </div>
+  <div id="rp-ch-writing" class="hidden">
+    <div id="rp-ch-title" style="font-weight:600;font-size:14px;margin-bottom:6px">✍️ 章节</div>
+    <div id="rp-ch-beat-links" style="font-size:11px;color:#888;margin-bottom:6px"></div>
+    <div class="mode-tabs" id="mode-tabs">
+      <button class="mt active" data-mode="continue" onclick="switchMode(this)">📝 续写</button>
+      <button class="mt" data-mode="direct" onclick="switchMode(this)">🎬 导演</button>
+      <button class="mt" data-mode="brainstorm" onclick="switchMode(this)">💡 脑暴</button>
+      <button class="mt" data-mode="critique" onclick="switchMode(this)">🔍 检查</button>
+    </div>
+    <div class="text-sm mb-6" id="mode-hint">写一段文字或方向，AI帮你续写</div>
+    <div class="input-row"><input id="dir-input" placeholder="写一个方向..." onkeydown="if(event.key==='Enter')generate()"><button class="btn btn-p" onclick="generate()">➡️</button></div>
+    <div id="suggestions" class="hidden"></div>
+    <div id="prose" class="prose-box empty" style="min-height:150px">选择一个章节，开始创作</div>
+    <div class="btn-gap" id="action-bar">
+      <button class="pbtn" onclick="polish('vivid')">✨ 画面感</button>
+      <button class="pbtn" onclick="polish('emotional')">💔 感人</button>
+      <button class="pbtn" onclick="polish('tense')">⚡ 紧张</button>
+      <button class="pbtn" onclick="saveProse()" style="border-color:#6c63ff;color:#6c63ff">💾 保存</button>
+    </div>
+    <div class="stage-bar" id="stage-bar">
+      <span class="sl">阶段：</span><span id="stage-indicator" style="font-size:12px;color:#999">📝 草稿</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-xs btn-s" id="btn-back" onclick="changeStage('regress')" style="display:none">◀ 回退</button>
+      <button class="btn btn-xs btn-p" id="btn-next" onclick="changeStage('advance')" style="display:none">推进 ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 📋 大纲面板：全局概览 ====== -->
+<div class="rp-section rp-outline-panel" id="rp-outline">
+  <div class="rp-header">
+    <h3>📊 全局概览</h3>
+    <p>查看故事的全貌，分析弧线和一致性。</p>
+  </div>
+  <div style="font-size:13px;color:#888;margin-bottom:8px">
+    大纲列表显示在左侧，分析工具在这里使用。
+  </div>
+  <div class="outline-toolbar">
+    <button class="btn btn-xs btn-s" onclick="panelAi('outline_arc')">📈 故事弧线分析</button>
+    <button class="btn btn-xs btn-s" onclick="panelAi('outline_consistency')">🔗 一致性检查</button>
+  </div>
+  <div id="ai-result-outline" class="ai-result"></div>
+</div>
+
+<!-- ====== 👥 角色面板：人物图谱 ====== -->
+<div class="rp-section rp-character-panel" id="rp-characters">
+  <!-- Graph View (default) -->
+  <div id="rp-char-graph">
+    <div class="rp-header" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8)">
+      <h3 style="color:#9d174d">👥 人物关系图谱</h3>
+      <p style="color:#db2777">点击角色节点查看详情，连线表示人物关系</p>
+    </div>
+    <div id="character-graph" style="min-height:300px;position:relative;overflow:hidden;background:#faf5ff;border-radius:8px;border:1px solid #f3e8ff;margin-bottom:6px">
+      <div style="text-align:center;padding:60px 20px;color:#bbb;font-size:13px">
+        <div style="font-size:40px;margin-bottom:6px">👥</div>
+        <div>暂无角色数据</div>
+        <div style="font-size:11px;color:#ddd;margin-top:4px">创建故事时会自动识别角色</div>
+      </div>
+    </div>
+  </div>
+  <!-- Detail View -->
+  <div id="rp-char-detail" class="hidden">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+      <button class="btn btn-xs btn-s" onclick="showCharGraph()">◀ 返回图谱</button>
+      <span style="flex:1"></span>
+      <button class="btn btn-xs btn-s" onclick="editCurrentChar()">✏️ 编辑</button>
+    </div>
+    <div id="char-detail-card" style="background:#faf5ff;border:1px solid #f3e8ff;border-radius:8px;padding:14px"></div>
+  </div>
+  <!-- Edit Modal inline (hidden until edit) -->
+  <div id="rp-char-edit" class="hidden" style="margin-top:6px;border-top:1px solid #fce7f3;padding-top:8px">
+    <input id="ce-name" placeholder="角色名" style="width:100%;padding:6px 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:13px;font-family:inherit;margin-bottom:4px">
+    <select id="ce-role" style="width:100%;padding:6px 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:12px;font-family:inherit;margin-bottom:4px">
+      <option value="主角">⭐ 主角</option>
+      <option value="配角">🔹 配角</option>
+      <option value="反派">💀 反派</option>
+    </select>
+    <textarea id="ce-desc" placeholder="描述" style="width:100%;padding:6px 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:12px;font-family:inherit;margin-bottom:4px;min-height:40px;resize:vertical"></textarea>
+    <input id="ce-goal" placeholder="目标" style="width:100%;padding:6px 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:12px;font-family:inherit;margin-bottom:4px">
+    <input id="ce-bg" placeholder="背景" style="width:100%;padding:6px 10px;border:1px solid #e5e7eb;border-radius:4px;font-size:12px;font-family:inherit;margin-bottom:4px">
+    <div style="font-size:12px;color:#888;margin-bottom:4px">关系：</div>
+    <div id="ce-relations"></div>
+    <div class="btn-gap">
+      <button class="btn btn-p btn-sm" onclick="saveCharEdit()">💾 保存</button>
+      <button class="btn btn-s btn-sm" onclick="cancelCharEdit()">取消</button>
+    </div>
+  </div>
+  <div id="ai-result-characters" class="ai-result"></div>
+</div>
+
+</div><!-- /right-panel -->
+</div><!-- /workspace -->
+
+<!-- ====== Modals ====== -->
+<div class="modal-overlay" id="modal-draft">
+<div class="modal"><h3>📥 新建草稿</h3>
+<textarea id="md-content" placeholder="写你的想法..." style="min-height:100px"></textarea>
+<div class="btn-gap"><button class="btn btn-p btn-sm" onclick="addDraft()">保存到草稿箱</button><button class="btn btn-s btn-sm" onclick="closeModal('modal-draft')">取消</button></div>
+</div></div>
+<div class="modal-overlay" id="modal-beat">
+<div class="modal"><h3>📅 添加节拍</h3>
+<input id="mb-title" placeholder="节拍标题"><input id="mb-location" placeholder="地点（可选）">
+<textarea id="mb-desc" placeholder="描述" style="min-height:40px"></textarea>
+<div id="mb-parent-area"><label style="font-size:12px;color:#666">父节拍（可选）：<select id="mb-parent" style="margin-left:4px;padding:2px 6px;border:1px solid #e5e7eb;border-radius:3px;font-size:12px"><option value="">— 主节拍 —</option></select></label></div>
+<div class="btn-gap"><button class="btn btn-p btn-sm" onclick="addBeat()">添加</button><button class="btn btn-s btn-sm" onclick="closeModal('modal-beat')">取消</button></div>
+</div></div>
+<div class="modal-overlay" id="modal-chapter">
+<div class="modal"><h3>📖 添加章节</h3>
+<input id="mc-title" placeholder="章节标题（留空自动生成）">
+<div id="mc-note" style="font-size:12px;color:#888;margin-bottom:6px">引用节拍：</div>
+<div id="mc-beats" style="font-size:12px;color:#666;margin-bottom:4px"></div>
+<div class="btn-gap"><button class="btn btn-p btn-sm" onclick="addChapter()">添加</button><button class="btn btn-s btn-sm" onclick="closeModal('modal-chapter')">取消</button></div>
+</div></div>
+<div class="modal-overlay" id="modal-ai">
+<div class="modal"><h3 id="ai-modal-title">✏️ AI 修改</h3>
+<textarea id="ai-modal-input" placeholder="描述你想怎么修改..." style="min-height:60px"></textarea>
+<div class="btn-gap"><button class="btn btn-p btn-sm" id="ai-modal-btn" onclick="aiEdit()">确认修改</button><button class="btn btn-s btn-sm" onclick="closeModal('ai-modal')">取消</button></div>
+</div></div>
+<div class="modal-overlay" id="modal-add-char">
+<div class="modal"><h3>👥 添加角色</h3>
+<input id="ac-name" placeholder="角色名称"><select id="ac-role" style="width:100%;padding:7px 10px;border:2px solid #e5e7eb;border-radius:5px;font-size:13px;font-family:inherit;margin-bottom:6px">
+<option value="主角">⭐ 主角</option><option value="配角" selected>🔹 配角</option><option value="反派">💀 反派</option>
+</select>
+<textarea id="ac-desc" placeholder="角色描述（可选）" style="min-height:40px"></textarea>
+<div class="btn-gap"><button class="btn btn-p btn-sm" onclick="addCharacter()">添加</button><button class="btn btn-s btn-sm" onclick="closeModal('modal-add-char')">取消</button></div>
+</div></div>
+<div class="modal-overlay" id="modal-rewrite">
+<div class="modal"><h3>📝 AI 改写草稿</h3>
+<textarea id="rewrite-input" placeholder="描述你想怎么改写（如：更有画面感、更简洁、改变语气...）" style="min-height:60px"></textarea>
+<div class="btn-gap"><button class="btn btn-p btn-sm" onclick="doDraftRewrite()">确认改写</button><button class="btn btn-s btn-sm" onclick="closeModal('modal-rewrite')">取消</button></div>
+</div></div>
+
+<script>
+let sid=null, cid=null, mode='continue', lastGen='', genTimer=null, currentTab='drafts', timelineView=false;
+let rpDraftId=null, rpBeatId=null;
+
+function api(p,m,b){return fetch(p,{method:m||(b?'POST':'GET'),headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}).then(r=>r.json())}
+
+// ====== Create ======
+function createStory(){
+  const raw=document.getElementById('raw-input').value.trim();
+  if(!raw)return alert('请写一些内容');
+  const btn=document.querySelector('#step-create .btn-p');
+  btn.innerHTML='<span class="spin"></span> 分析中...';btn.disabled=true;
+  api('/api/story/create','POST',{raw_text:raw}).then(d=>{
+    btn.innerHTML='✨ 帮我理清思路';btn.disabled=false;
+    if(d.error)return alert(d.error);
+    sid=d.story_id;
+    let h=`<p><strong>📖 ${d.title}</strong> · ${d.genre} · ${d.tone}</p>`;
+    const ri={'主角':'⭐','配角':'🔹','反派':'💀'};
+    if(d.characters?.length) h+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">'+d.characters.map(c=>`<span style="padding:3px 7px;background:#f8f9ff;border:1px solid #e8e8ff;border-radius:5px;font-size:12px">${ri[c.role]||'👤'} <strong>${c.name}</strong></span>`).join('')+'</div>';
+    if(d.drafts?.length) h+='<div class="mt-6"><strong>📥 草稿：</strong></div>'+d.drafts.map(dd=>`<div style="padding:3px 0;font-size:12px;color:#666;border-bottom:1px solid #f3f4f6">📝 ${dd.title}</div>`).join('');
+    document.getElementById('confirm-html').innerHTML=h;
+    const qa=document.getElementById('questions-html');
+    if(d.questions?.length) qa.innerHTML='<div style="font-size:12px;color:#92400e"><strong>❓ 疑问：</strong></div>'+d.questions.map(q=>`<div style="padding:3px 7px;background:#fffbeb;border:1px solid #fde68a;border-radius:4px;margin-bottom:2px;font-size:12px">${q}</div>`).join('');
+    else qa.innerHTML='';
+    document.getElementById('confirm-area').classList.remove('hidden');
+    document.querySelector('#step-create textarea').style.display='none';
+    document.querySelector('#step-create .btn-gap').style.display='none';
+    document.getElementById('confirm-area').scrollIntoView({behavior:'smooth'});
+  }).catch(()=>{btn.innerHTML='✨ 帮我理清思路';btn.disabled=false;alert('请求失败')});
+}
+function showRefine(){
+  document.getElementById('refine-area').classList.remove('hidden');
+  document.getElementById('refine-input').value='';
+  document.getElementById('refine-questions').innerHTML='<span class="spin"></span> 生成追问中...';
+  api('/api/story/'+sid+'/questions','POST').then(d=>{
+    if(d.questions?.length){
+      document.getElementById('refine-questions').innerHTML=
+        d.questions.map(q=>`<button class="scard" style="display:inline-block;margin:2px;padding:4px 10px;border:1px solid #6c63ff;border-radius:14px;background:#eef0ff;color:#4338ca;cursor:pointer;font-size:12px;font-family:inherit" onclick="answerRefine(this)">${q}</button>`).join('');
+    }else{
+      document.getElementById('refine-questions').innerHTML='<div style="font-size:12px;color:#888">暂时没有追问，可以直接补充内容</div>';
+    }
+  }).catch(()=>{document.getElementById('refine-questions').innerHTML='<div style="font-size:12px;color:#888">暂时没有追问，可以直接补充</div>'});
+}
+function answerRefine(btn){document.getElementById('refine-input').value=btn.textContent;refineStory()}
+function generateMoreQuestions(){
+  document.getElementById('refine-questions').innerHTML='<span class="spin"></span> 生成中...';
+  api('/api/story/'+sid+'/questions','POST').then(d=>{
+    if(d.questions?.length) document.getElementById('refine-questions').innerHTML=d.questions.map(q=>`<button class="scard" style="display:inline-block;margin:2px;padding:4px 10px;border:1px solid #6c63ff;border-radius:14px;background:#eef0ff;color:#4338ca;cursor:pointer;font-size:12px" onclick="answerRefine(this)">${q}</button>`).join('');
+  });
+}
+function refineStory(){
+  const fb=document.getElementById('refine-input').value.trim();
+  if(!fb)return;
+  api('/api/story/'+sid+'/refine','POST',{question:fb}).then(d=>{
+    if(d.status==='ok'){
+      alert('✅ 已更新！\n📖 '+d.title+' · '+d.genre+' · '+d.tone);
+      document.getElementById('refine-area').classList.add('hidden');
+      refreshStoryInfo();
+    }
+  });
+}
+function refreshStoryInfo(){
+  api('/api/story/'+sid).then(d=>{
+    if(!d||d.detail)return;
+    let h=`<p><strong>📖 ${d.title}</strong> · ${d.genre} · ${d.tone}</p>`;
+    const ri={'主角':'⭐','配角':'🔹','反派':'💀'};
+    if(d.characters?.length) h+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">'+d.characters.map(c=>`<span style="padding:3px 7px;background:#f8f9ff;border:1px solid #e8e8ff;border-radius:5px;font-size:12px">${ri[c.role]||'👤'} <strong>${c.name}</strong></span>`).join('')+'</div>';
+    document.getElementById('confirm-html').innerHTML=h;
+  });
+}
+function startWriting(){
+  document.getElementById('step-create').style.display='none';
+  document.getElementById('sbar').classList.add('show');
+  document.getElementById('workspace').classList.add('show');
+  refresh().then(()=>{
+    switchTab(document.querySelector('.tab-btn[data-tab="drafts"]'));
+    const items=document.querySelectorAll('#draft-list .item');
+    if(items.length>0) items[0].click();
+  });
+}
+function resetAll(){
+  sid=null;cid=null;lastGen='';rpDraftId=null;rpBeatId=null;
+  document.getElementById('sbar').classList.remove('show');
+  document.getElementById('workspace').classList.remove('show');
+  document.getElementById('step-create').style.display='block';
+  document.querySelector('#step-create textarea').style.display='';
+  document.querySelector('#step-create .btn-gap').style.display='';
+  document.getElementById('confirm-area').classList.add('hidden');
+  document.getElementById('refine-area').classList.add('hidden');
+}
+
+// ====== Tab ======
+function switchTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab=btn.dataset.tab;
+  document.querySelectorAll('.tab-body').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('tab-'+currentTab).classList.remove('hidden');
+  document.querySelectorAll('.rp-section').forEach(el=>el.classList.remove('active'));
+  document.getElementById('rp-'+currentTab).classList.add('active');
+  // Hide AI results when switching
+  document.querySelectorAll('.ai-result').forEach(el=>{el.classList.remove('show');el.textContent=''});
+  if(currentTab==='outline')refreshOutline();
+}
+
+// ====== Refresh ======
+function refresh(){if(!sid)return Promise.resolve();return api('/api/story/'+sid).then(d=>{if(!d||d.detail)return;updateBar(d);renderDrafts(d);renderBeats(d);renderChapters(d);})}
+function updateBar(d){
+  document.getElementById('sb-title').textContent=d.title;
+  document.getElementById('sb-genre').textContent=d.genre;
+  const ri={'主角':'⭐','配角':'🔹','反派':'💀'};
+  document.getElementById('sb-chars').textContent=(d.characters||[]).map(c=>(ri[c.role]||'👤')+c.name).join(' · ');
+  const st=d.stats||{};
+  document.getElementById('sb-stats').textContent=`${st.total_drafts||0}草·${st.total_beats||0}拍·${st.total_chapters||0}章·${st.total_words||0}字`;
+}
+
+// ====== Draft Panel ======
+function renderDrafts(d){
+  const el=document.getElementById('draft-list');
+  const drafts=d.drafts||[];
+  if(!drafts.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#bbb;font-size:12px">📝 写点什么吧</div>';return}
+  el.innerHTML=drafts.map(dd=>`<div class="item ${dd.id===rpDraftId?'active':''}" onclick="viewDraft('${dd.id}')">
+    <input type="checkbox" class="cb" value="${dd.id}" onclick="event.stopPropagation()">
+    <span class="label truncate">${dd.title||'(无标题)'}</span>
+    <span class="tag">${dd.source==='ai_suggestion'?'💡':'📝'}</span>
+    <span class="del" onclick="event.stopPropagation();deleteDraft('${dd.id}')">✕</span>
+  </div>`).join('');
+}
+function viewDraft(did){
+  rpDraftId=did;
+  // Clear previous AI result
+  hideAiResult('draft');
+  api('/api/story/'+sid).then(d=>{
+    const dd=d.drafts?.find(x=>x.id===did);
+    if(!dd)return;
+    const dt=document.querySelector('.tab-btn[data-tab="drafts"]');
+    if(currentTab!=='drafts') switchTab(dt);
+    document.getElementById('rp-draft-empty').classList.add('hidden');
+    document.getElementById('rp-draft-editor').classList.remove('hidden');
+    document.getElementById('rp-draft-id').textContent=dd.id;
+    document.getElementById('rp-draft-title').value=dd.title||'';
+    document.getElementById('rp-draft-content').value=dd.content||'';
+    document.querySelectorAll('#draft-list .item').forEach(el=>el.classList.remove('active'));
+  });
+}
+function saveRpDraft(){
+  const id=document.getElementById('rp-draft-id').textContent;
+  if(!id)return;
+  const title=document.getElementById('rp-draft-title').value.trim();
+  const content=document.getElementById('rp-draft-content').value.trim();
+  api('/api/story/'+sid+'/drafts/'+id,'PUT',{title,content}).then(()=>refresh());
+}
+function deleteRpDraft(){
+  const id=document.getElementById('rp-draft-id').textContent;
+  if(!id||!confirm('删除此草稿？'))return;
+  api('/api/story/'+sid+'/drafts/'+id,'DELETE').then(()=>{
+    rpDraftId=null;document.getElementById('rp-draft-empty').classList.remove('hidden');
+    document.getElementById('rp-draft-editor').classList.add('hidden');refresh();
+  });
+}
+function deleteDraft(did){
+  if(!confirm('删除此草稿？'))return;
+  api('/api/story/'+sid+'/drafts/'+did,'DELETE').then(()=>{
+    if(rpDraftId===did){rpDraftId=null;document.getElementById('rp-draft-empty').classList.remove('hidden');document.getElementById('rp-draft-editor').classList.add('hidden')}
+    refresh();
+  });
+}
+function showAddDraft(){document.getElementById('md-content').value='';document.getElementById('modal-draft').classList.add('show')}
+function addDraft(){
+  const content=document.getElementById('md-content').value.trim();
+  if(!content)return;
+  api('/api/story/'+sid+'/drafts','POST',{content}).then(()=>{closeModal('modal-draft');refresh()});
+}
+function genBeatsFromDrafts(){
+  const cbs=document.querySelectorAll('#draft-list .cb:checked');
+  const ids=Array.from(cbs).map(el=>el.value);
+  if(!ids.length&&rpDraftId) ids.push(rpDraftId);
+  if(!ids.length){alert('请勾选至少一份草稿');return}
+  document.getElementById('btn-gen-beats').innerHTML='<span class="spin"></span> 生成中...';
+  api('/api/story/'+sid+'/beats/generate','POST',{draft_ids:ids}).then(d=>{
+    document.getElementById('btn-gen-beats').innerHTML='📅 生成节拍';
+    if(d.beats?.length) alert('✅ 生成了 '+d.beats.length+' 个节拍！');
+    else if(d.raw) alert('AI返回：\n'+d.raw.slice(0,300));
+    refresh();
+  });
+}
+// Draft AI tools
+function panelAi(action){
+  const parts=action.split('_');
+  const panel=parts[0]; // draft, beat, outline
+  const id=panel==='draft'?rpDraftId:(panel==='beat'?rpBeatId:'');
+  const el=document.getElementById('ai-result-'+panel);
+  
+  if(panel==='draft'&&!rpDraftId){alert('请先选择一份草稿');return}
+  if(panel==='beat'&&!rpBeatId){alert('请先选择一个节拍查看');return}
+  
+  el.innerHTML='<span class="spin"></span> AI 分析中...';
+  el.classList.add('show');
+  
+  api('/api/story/'+sid+'/ai-panel','POST',{action,context_id:id,input:''}).then(d=>{
+    if(d.result){
+      el.textContent=d.result;
+    }else{
+      el.textContent='❌ AI 处理失败';
+    }
+  }).catch(()=>{el.textContent='❌ 网络错误'});
+}
+function showDraftRewrite(){
+  if(!rpDraftId){alert('请先选择一份草稿');return}
+  document.getElementById('rewrite-input').value='';
+  document.getElementById('modal-rewrite').classList.add('show');
+}
+function doDraftRewrite(){
+  const input=document.getElementById('rewrite-input').value.trim();
+  if(!input)return;
+  closeModal('modal-rewrite');
+  const el=document.getElementById('ai-result-draft');
+  el.innerHTML='<span class="spin"></span> AI 改写中...';el.classList.add('show');
+  api('/api/story/'+sid+'/ai-panel','POST',{action:'draft_rewrite',context_id:rpDraftId,input}).then(d=>{
+    if(d.result){
+      // Replace draft content with rewrite result
+      document.getElementById('rp-draft-content').value=d.result;
+      el.textContent='✅ 已应用改写内容，点击💾保存';
+    }else{el.textContent='❌ 改写失败'}
+  }).catch(()=>{el.textContent='❌ 网络错误'});
+}
+function hideAiResult(panel){
+  const el=document.getElementById('ai-result-'+panel);
+  if(el){el.classList.remove('show');el.textContent=''}
+}
+
+// ====== Beat Panel ======
+function renderBeats(d){
+  const el=document.getElementById('beat-list');
+  const beats=d.beats||[];
+  if(!beats.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#bbb;font-size:12px">📅 还没有节拍，从草稿生成</div>';return}
+  const masters=beats.filter(b=>!b.parent_beat_id).sort((a,b)=>a.order-b.order);
+  el.innerHTML=masters.map(m=>`<div class="item ${m.id===rpBeatId?'active':''}" onclick="viewBeat('${m.id}')">
+    <input type="checkbox" class="cb beat-cb" value="${m.id}" onclick="event.stopPropagation()">
+    <span class="label"><strong>${m.title}</strong></span>
+    <span class="tag" style="background:#eef0ff;color:#6c63ff">主</span>
+    <span class="del" onclick="event.stopPropagation();deleteBeat('${m.id}')">✕</span>
+  </div>
+  ${beats.filter(c=>c.parent_beat_id===m.id).sort((a,b)=>a.order-b.order).map(c=>`<div class="item sub-item ${c.id===rpBeatId?'active':''}" onclick="viewBeat('${c.id}')">
+    <input type="checkbox" class="cb beat-cb" value="${c.id}" onclick="event.stopPropagation()">
+    <span class="label">${c.title}</span>
+    <span class="tag sub">次</span>
+    <span class="del" onclick="event.stopPropagation();deleteBeat('${c.id}')">✕</span>
+  </div>`).join('')}
+  <div style="font-size:11px;color:#bbb;padding:2px 4px">${m.description||''}${m.location?'📍'+m.location:''}</div>
+  `).join('');
+}
+function viewBeat(bid){
+  rpBeatId=bid;
+  hideAiResult('beat');
+  api('/api/story/'+sid).then(d=>{
+    const b=d.beats?.find(x=>x.id===bid);
+    if(!b)return;
+    const bt=document.querySelector('.tab-btn[data-tab="beats"]');
+    if(currentTab!=='beats') switchTab(bt);
+    document.getElementById('rp-beat-empty').classList.add('hidden');
+    document.getElementById('rp-beat-detail').classList.remove('hidden');
+    document.getElementById('rp-beat-title').textContent=b.title;
+    document.getElementById('rp-beat-desc').querySelector('span').textContent=b.description||'(无)';
+    document.getElementById('rp-beat-loc').querySelector('span').textContent=b.location||'(未设置)';
+    document.getElementById('rp-beat-chars').querySelector('span').textContent=(b.characters?.length?b.characters.join(', '):'(无)');
+    document.getElementById('rp-beat-type').querySelector('span').textContent=b.parent_beat_id?'次节拍':'主节拍';
+    document.querySelectorAll('#beat-list .item').forEach(el=>el.classList.remove('active'));
+  });
+}
+function deleteBeat(bid){
+  if(!confirm('删除此节拍？'))return;
+  api('/api/story/'+sid+'/beats/'+bid,'DELETE').then(()=>{
+    if(rpBeatId===bid){rpBeatId=null;document.getElementById('rp-beat-empty').classList.remove('hidden');document.getElementById('rp-beat-detail').classList.add('hidden')}
+    refresh();
+  });
+}
+function showAddBeat(){
+  document.getElementById('mb-title').value='';document.getElementById('mb-location').value='';document.getElementById('mb-desc').value='';
+  api('/api/story/'+sid).then(d=>{
+    const sel=document.getElementById('mb-parent');
+    sel.innerHTML='<option value="">— 主节拍 —</option>'+(d.beats||[]).filter(b=>!b.parent_beat_id).map(b=>`<option value="${b.id}">${b.title}</option>`).join('');
+  });
+  document.getElementById('modal-beat').classList.add('show');
+}
+function addBeat(){
+  const title=document.getElementById('mb-title').value.trim();
+  if(!title)return;
+  const parent=document.getElementById('mb-parent').value;
+  api('/api/story/'+sid+'/beats','POST',{title,description:document.getElementById('mb-desc').value.trim(),location:document.getElementById('mb-location').value.trim(),parent_beat_id:parent}).then(()=>{closeModal('modal-beat');refresh()});
+}
+function showBeatFill(){
+  if(!rpBeatId){alert('请先选择一个节拍查看');return}
+  hideAiResult('beat');
+  const el=document.getElementById('ai-result-beat');
+  el.innerHTML='<span class="spin"></span> AI 分析中...';el.classList.add('show');
+  const input=prompt('你想补充哪方面的节拍？（可选，不填则AI自动分析）')||'';
+  api('/api/story/'+sid+'/ai-panel','POST',{action:'beat_fill',context_id:rpBeatId,input}).then(d=>{
+    if(d.result){el.textContent=d.result}else{el.textContent='❌ 处理失败'}
+  });
+}
+function genChapterFromBeats(){
+  const cbs=document.querySelectorAll('#beat-list .beat-cb:checked');
+  const ids=Array.from(cbs).map(el=>el.value);
+  if(!ids.length){alert('请勾选至少一个节拍');return}
+  api('/api/story/'+sid).then(d=>{
+    const prevIds=(d.chapters||[]).map(c=>c.id);
+    document.getElementById('btn-gen-ch').innerHTML='<span class="spin"></span> 生成中...';
+    api('/api/story/'+sid+'/chapters/generate','POST',{beat_ids:ids,prev_chapter_ids:prevIds}).then(r=>{
+      document.getElementById('btn-gen-ch').innerHTML='📖 生成章节';
+      if(r.id){
+        alert('✅ 生成了「'+r.title+'」');
+        switchTab(document.querySelector('.tab-btn[data-tab="chapters"]'));
+        refresh();
+        setTimeout(()=>{selectChapter(r.id)},200);
+      }else{alert('生成失败')}
+    });
+  });
+}
+
+// ====== Chapter Panel ======
+function renderChapters(d){
+  const el=document.getElementById('chapter-list');
+  const chapters=d.chapters||[];
+  if(!chapters.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#bbb;font-size:12px">📖 还没有章节</div>';return}
+  el.innerHTML=chapters.map(c=>{
+    const active=c.id===cid?'active':'';
+    return `<div class="item ${active}" onclick="selectChapter('${c.id}')">
+      <span class="label truncate"><strong>${c.title}</strong></span>
+      <span class="tag ${c.stage}">${c.stage_label||c.stage}</span>
+      <span class="text-xs">${c.word_count||0}字</span>
+      <span class="del" onclick="event.stopPropagation();deleteChapter('${c.id}')">✕</span>
+    </div>
+    ${c.summary?`<div style="font-size:11px;color:#888;padding:0 8px 4px 8px;margin-top:-2px">📌 ${c.summary}</div>`:''}`;
+  }).join('');
+}
+function selectChapter(id){
+  cid=id;
+  api('/api/story/'+sid).then(d=>{
+    const ch=d.chapters?.find(x=>x.id===id);
+    if(!ch)return;
+    if(currentTab!=='chapters') switchTab(document.querySelector('.tab-btn[data-tab="chapters"]'));
+    document.getElementById('rp-ch-empty').classList.add('hidden');
+    document.getElementById('rp-ch-writing').classList.remove('hidden');
+    document.getElementById('rp-ch-title').textContent='✍️ '+ch.title;
+    // Show linked beats
+    const linkedBeats=(ch.beat_ids||[]).map(bid=>{
+      const b=d.beats?.find(x=>x.id===bid);
+      return b?b.title:null;
+    }).filter(Boolean);
+    document.getElementById('rp-ch-beat-links').textContent=linkedBeats.length?'📎 关联节拍：'+linkedBeats.join(' → '):'';
+    renderChapters(d);
+    const area=document.getElementById('prose');
+    if(ch.prose){area.textContent=ch.prose;area.className='prose-box';lastGen=ch.prose}
+    else{area.textContent='✍️ 开始写吧！';area.className='prose-box empty';lastGen=''}
+    document.getElementById('suggestions').classList.add('hidden');
+    const stages=['draft','first_pass','revising','review','published'];
+    const labels={'draft':'📝 草稿','first_pass':'👀 初稿','revising':'🔧 修改','review':'✅ 审核','published':'📖 发布'};
+    const idx=stages.indexOf(ch.stage);
+    document.getElementById('stage-indicator').textContent=labels[ch.stage]||ch.stage;
+    document.getElementById('btn-back').style.display=idx>0?'inline-flex':'none';
+    document.getElementById('btn-next').style.display=idx<4?'inline-flex':'none';
+  });
+}
+function deleteChapter(id){
+  if(!confirm('删除此章节？'))return;
+  api('/api/story/'+sid+'/chapters/'+id,'DELETE').then(()=>{
+    if(cid===id){cid=null;document.getElementById('rp-ch-empty').classList.remove('hidden');document.getElementById('rp-ch-writing').classList.add('hidden')}
+    refresh();
+  });
+}
+function showAddChapter(){
+  document.getElementById('mc-title').value='';
+  api('/api/story/'+sid).then(d=>{
+    const beats=d.beats||[];
+    const el=document.getElementById('mc-beats');
+    if(beats.length) el.innerHTML='<div>引用节拍：</div>'+beats.map(b=>`<label style="display:flex;align-items:center;gap:3px;font-size:12px;padding:2px 0;cursor:pointer"><input type="checkbox" class="cb-ch" value="${b.id}"> ${b.title}</label>`).join('');
+    else el.innerHTML='<div style="font-size:12px;color:#999">暂无节拍</div>';
+  });
+  document.getElementById('modal-chapter').classList.add('show');
+}
+function addChapter(){
+  const title=document.getElementById('mc-title').value.trim();
+  const bids=Array.from(document.querySelectorAll('.cb-ch:checked')).map(el=>el.value);
+  api('/api/story/'+sid+'/chapters','POST',{title:title||'新章节',beat_ids:bids}).then(()=>{closeModal('modal-chapter');refresh()});
+}
+
+// ====== Writing ======
+function switchMode(btn){
+  document.querySelectorAll('.mt').forEach(b=>b.classList.remove('active'));btn.classList.add('active');mode=btn.dataset.mode;
+  document.getElementById('suggestions').classList.add('hidden');
+  const hints={continue:'写一段，AI续写',direct:'给AI创作指令',brainstorm:'AI给剧情方向建议（可点击）',critique:'AI分析正文优缺点'};
+  document.getElementById('mode-hint').textContent=hints[mode]||'';
+  document.getElementById('dir-input').placeholder=mode==='direct'?'输入指令...':mode==='brainstorm'?'描述当前进展...':'写一个方向...';
+  if(mode==='critique'&&lastGen)document.getElementById('dir-input').value=lastGen;
+}
+function generate(){
+  if(!cid){alert('请先选择一个章节');return}
+  const dir=document.getElementById('dir-input').value.trim();
+  document.getElementById('suggestions').classList.add('hidden');
+  const area=document.getElementById('prose');
+  const start=Date.now();
+  if(genTimer)clearInterval(genTimer);
+  area.innerHTML='<span class="spin"></span> ⏳ <span id="elap">0</span>s';area.className='prose-box';
+  genTimer=setInterval(()=>{document.getElementById('elap').textContent=Math.floor((Date.now()-start)/1000)},1000);
+  api('/api/story/'+sid+'/write','POST',{chapter_id:cid||'',direction:dir,mode}).then(d=>{
+    if(genTimer){clearInterval(genTimer);genTimer=null}
+    if(!d.result){area.textContent='❌ 生成失败';return}
+    if(mode==='brainstorm'){renderSuggestions(d.result);area.textContent='💡 点击建议直接使用'}
+    else{area.textContent=d.result;area.className='prose-box';lastGen=d.result}
+  }).catch(()=>{if(genTimer){clearInterval(genTimer);genTimer=null}area.textContent='❌ 网络错误'});
+}
+function renderSuggestions(text){
+  const area=document.getElementById('suggestions');
+  let lines=text.split('\n').filter(l=>l.trim()).map(l=>l.replace(/^[\d.🔀💡✨🎯📌⚠️🔮🔍💼📖➡️•\-*]+\s*/,'').trim()).filter(l=>l.length>5);
+  if(!lines.length){area.classList.add('hidden');return}
+  area.innerHTML='<div style="font-size:11px;font-weight:500;color:#92400e;margin-bottom:3px">💡 AI建议（点击使用）</div>'+lines.map(l=>`<button class="scard" data-s="${encodeURIComponent(l)}" onclick="useS(this)">${l}</button>`).join('');
+  area.classList.remove('hidden');
+}
+function useS(btn){const t=decodeURIComponent(btn.dataset.s);document.querySelectorAll('.mt').forEach(b=>b.classList.remove('active'));document.querySelector('.mt[data-mode="continue"]').classList.add('active');mode='continue';document.getElementById('dir-input').value=t;document.getElementById('suggestions').classList.add('hidden');generate()}
+function polish(st){
+  if(!cid)return;
+  const area=document.getElementById('prose');let t=lastGen||area.textContent;
+  if(!t||t.includes('还没有内容')||t.includes('选择一个章节'))return;
+  const start=Date.now();
+  if(genTimer)clearInterval(genTimer);
+  area.innerHTML='<span class="spin"></span> ⏳ <span id="elap">0</span>s';area.className='prose-box';
+  genTimer=setInterval(()=>{document.getElementById('elap').textContent=Math.floor((Date.now()-start)/1000)},1000);
+  api('/api/story/'+sid+'/write','POST',{chapter_id:cid,direction:t,mode:'polish_'+st}).then(d=>{
+    if(genTimer){clearInterval(genTimer);genTimer=null}
+    if(d.result){area.textContent=d.result;area.className='prose-box';lastGen=d.result}
+  });
+}
+function saveProse(){
+  if(!cid){alert('请选择章节');return}
+  const area=document.getElementById('prose');const t=lastGen||area.textContent;
+  if(!t||t.includes('还没有内容')||t.includes('选择一个章节')){alert('请先生成内容');return}
+  api('/api/story/'+sid+'/chapters/'+cid+'/save','POST',{chapter_id:cid,direction:t,mode:'continue'}).then(d=>{if(d.status==='ok'){alert('✅ 已保存 · '+(d.summary||'梗概已更新'));refresh()}});
+}
+function changeStage(act){
+  if(!cid)return;
+  api('/api/story/'+sid+'/chapters/'+cid+'/stage','POST',{action:act}).then(d=>{
+    if(d.status==='ok'){
+      const labels={'draft':'📝 草稿','first_pass':'👀 初稿','revising':'🔧 修改','review':'✅ 审核','published':'📖 发布'};
+      document.getElementById('stage-indicator').textContent=labels[d.stage]||d.stage;
+      const stages=['draft','first_pass','revising','review','published'];const idx=stages.indexOf(d.stage);
+      document.getElementById('btn-back').style.display=idx>0?'inline-flex':'none';
+      document.getElementById('btn-next').style.display=idx<4?'inline-flex':'none';
+      refresh();
+    }
+  });
+}
+
+// ====== Outline ======
+function refreshOutline(){
+  if(!sid)return;
+  api('/api/story/'+sid+'/outline').then(d=>{
+    const outline=d.outline||[];
+    const el=document.getElementById('outline-view');
+    if(!outline.length){el.innerHTML='<div style="text-align:center;padding:16px;color:#bbb;font-size:12px">📖 写了章节会自动显示</div>';return}
+    if(timelineView){
+      el.innerHTML='<div class="timeline">'+outline.map(o=>`<div class="tl-item"><div class="tl-title">${o.title}</div><div class="tl-desc">${o.summary||'（暂无）'} <span style="color:#999;font-size:10px">${o.stage_label||o.stage} · ${o.word_count||0}字</span></div></div>`).join('')+'</div>';
+    }else{
+      el.innerHTML=outline.map(o=>`<div class="ol-item"><div class="ol-title">${o.order+1}. ${o.title}</div><div class="ol-summary">${o.summary||'（暂无梗概）'} <span style="color:#bbb;font-size:10px">${o.stage_label||o.stage} · ${o.word_count||0}字</span></div></div>`).join('');
+    }
+  });
+}
+function updateOutline(){
+  api('/api/story/'+sid+'/outline/update','POST').then(d=>{if(d.outline){alert('✅ 大纲已更新');refreshOutline();refresh()}});
+}
+function toggleTimeline(){
+  timelineView=!timelineView;
+  document.getElementById('btn-tl').textContent=timelineView?'📋 列表':'📅 时间线';
+  refreshOutline();
+}
+
+// ====== AI Edit ======
+function aiEdit(){
+  const input=document.getElementById('ai-modal-input').value.trim();
+  if(!input)return;
+  closeModal('ai-modal');
+  if(currentTab==='drafts'&&rpDraftId){
+    const content=document.getElementById('rp-draft-content').value;
+    api('/api/story/'+sid+'/drafts/ai-edit','POST',{title:input,content}).then(r=>{
+      if(r.result){document.getElementById('rp-draft-content').value=r.result;alert('✅ 修改完成，记得保存')}
+    });
+  }else if(currentTab==='beats'&&rpBeatId){
+    api('/api/story/'+sid+'/edit-beat','POST',{question:rpBeatId,feedback:input}).then(r=>{
+      if(r.result){alert('✅ AI建议：\n'+r.result.slice(0,300));refresh()}
+    });
+  }else if(currentTab==='outline'){
+    api('/api/story/'+sid+'/outline/ai-edit','POST',{raw_text:input}).then(r=>{
+      if(r.result){alert('✅ AI建议：\n'+r.result.slice(0,300));refreshOutline()}
+    });
+  }else{alert('请先选择要修改的项（草稿/节拍/大纲）')}
+}
+
+// ====== Character Panel ======
+let currentCharName = null;
+
+function refreshCharacters(){
+  if(!sid)return;
+  api('/api/story/'+sid+'/characters').then(d=>{
+    if(!d||d.detail)return;
+    renderCharacters(d.characters);
+    renderCharacterGraph(d.characters);
+  });
+}
+
+function renderCharacters(chars){
+  const el=document.getElementById('character-list');
+  if(!chars||!chars.length){
+    el.innerHTML='<div style="text-align:center;padding:16px;color:#bbb;font-size:12px">👥 还没有角色</div>';
+    return;
+  }
+  const ri={'主角':'⭐','配角':'🔹','反派':'💀'};
+  // Group by role
+  const order=['主角','配角','反派'];
+  const grouped={};
+  chars.forEach(c=>{const r=c.role||'配角';if(!grouped[r])grouped[r]=[];grouped[r].push(c)});
+  let html='';
+  order.forEach(r=>{
+    if(!grouped[r])return;
+    html+=`<div style="font-size:10px;color:#999;padding:4px 2px 2px">${ri[r]||'👤'} ${r}</div>`;
+    grouped[r].forEach(c=>{
+      html+=`<div class="item ${c.name===currentCharName?'active':''}" onclick="showCharacter('${c.name.replace(/'/g,"\\'")}')">
+        <span class="label truncate"><strong>${c.name}</strong></span>
+        <span style="font-size:10px;color:#999">${c.goal?c.goal.slice(0,12)+'…':''}</span>
+        <span class="del" onclick="event.stopPropagation();deleteCharacter('${c.name.replace(/'/g,"\\'")}')">✕</span>
+      </div>`;
+    });
+  });
+  el.innerHTML=html;
+}
+
+function showCharacter(name){
+  currentCharName=name;
+  api('/api/story/'+sid+'/characters').then(d=>{
+    const c=d.characters?.find(x=>x.name===name);
+    if(!c)return;
+    // Switch to chars tab
+    const ct=document.querySelector('.tab-btn[data-tab="characters"]');
+    if(currentTab!=='characters') switchTab(ct);
+    // Hide graph, show detail
+    document.getElementById('rp-char-graph').classList.add('hidden');
+    document.getElementById('rp-char-detail').classList.remove('hidden');
+    document.getElementById('rp-char-edit').classList.add('hidden');
+    // Build detail card
+    const ri={'主角':'⭐','配角':'🔹','反派':'💀'};
+    const card=document.getElementById('char-detail-card');
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="font-size:24px">${ri[c.role]||'👤'}</span>
+        <div>
+          <div style="font-weight:600;font-size:16px">${c.name}</div>
+          <div style="font-size:12px;color:#888">${c.role||'角色'}</div>
+        </div>
+      </div>
+      ${c.description?`<div style="font-size:13px;line-height:1.6;margin-bottom:8px;padding:8px 10px;background:white;border-radius:6px">📝 ${c.description}</div>`:''}
+      ${c.goal?`<div style="font-size:12px;color:#6d28d9;margin-bottom:4px">🎯 目标：${c.goal}</div>`:''}
+      ${c.background?`<div style="font-size:12px;color:#555;margin-bottom:6px">📜 背景：${c.background}</div>`:''}
+      ${(c.relationships||[]).filter(r=>r.with_name).length?`
+        <div style="font-size:12px;font-weight:500;margin-top:6px;margin-bottom:4px">🔗 关系</div>
+        ${c.relationships.filter(r=>r.with_name).map(r=>`
+          <div style="font-size:12px;padding:4px 8px;background:white;border-radius:4px;margin-bottom:2px;display:flex;justify-content:space-between">
+            <span>${r.type||'关联'} → <strong>${r.with_name}</strong></span>
+            <span style="color:#888">${r.description||''}</span>
+          </div>
+        `).join('')}
+      `:''}
+      ${(!c.description&&!c.goal&&!c.background&&(!c.relationships||!c.relationships.length))?'<div style="font-size:12px;color:#999;padding:10px 0">暂无详细信息</div>':''}
+      <div class="btn-gap" style="margin-top:8px">
+        <button class="btn btn-xs btn-p" onclick="editCurrentChar()">✏️ 编辑</button>
+        <button class="btn btn-xs btn-s" onclick="deleteCharacter('${c.name.replace(/'/g,"\\'")}')">🗑️ 删除</button>
+      </div>
+    `;
+    renderCharacters(d.characters);
+  });
+}
+
+function showCharGraph(){
+  currentCharName=null;
+  document.getElementById('rp-char-graph').classList.remove('hidden');
+  document.getElementById('rp-char-detail').classList.add('hidden');
+  document.getElementById('rp-char-edit').classList.add('hidden');
+  renderCharacters([]); // re-render to clear active state
+  refreshCharacters();
+}
+
+function renderCharacterGraph(chars){
+  const el=document.getElementById('character-graph');
+  if(!chars||chars.length<1){
+    el.innerHTML=`<div style="text-align:center;padding:60px 20px;color:#bbb;font-size:13px">
+      <div style="font-size:40px;margin-bottom:6px">👥</div>
+      <div>暂无角色数据</div>
+    </div>`;
+    return;
+  }
+  if(chars.length===1){
+    const c=chars[0];
+    el.innerHTML=`<div style="text-align:center;padding:40px 20px">
+      <span style="font-size:60px">${roleEmoji(c.role)}</span>
+      <div style="font-size:16px;font-weight:600;margin-top:6px">${c.name}</div>
+      <div style="font-size:12px;color:#888">${c.role||'角色'}</div>
+    </div>`;
+    return;
+  }
+  
+  const w=el.offsetWidth||540;
+  const h=el.offsetHeight||300;
+  const cx=w/2, cy=h/2;
+  const radius=Math.min(w,h)/2-50;
+  const n=chars.length;
+  const angleStep=(2*Math.PI)/n;
+  
+  // Collect all relationships
+  const allRels=[];
+  chars.forEach(c=>{
+    (c.relationships||[]).forEach(r=>{
+      if(r.with_name&&chars.some(x=>x.name===r.with_name)){
+        allRels.push({from:c.name,to:r.with_name,type:r.type||'关联'});
+      }
+    });
+  });
+  
+  let svg=`<svg width="${w}" height="${h}" style="position:absolute;top:0;left:0">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="20" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10" fill="#c4b5fd"/>
+      </marker>
+    </defs>`;
+  
+  // Draw relationship lines
+  allRels.forEach(r=>{
+    const fi=chars.findIndex(x=>x.name===r.from);
+    const ti=chars.findIndex(x=>x.name===r.to);
+    if(fi<0||ti<0)return;
+    const fAng=angleStep*fi-Math.PI/2;
+    const tAng=angleStep*ti-Math.PI/2;
+    const fx=cx+radius*Math.cos(fAng), fy=cy+radius*Math.sin(fAng);
+    const tx=cx+radius*Math.cos(tAng), ty=cy+radius*Math.sin(tAng);
+    const mx=(fx+tx)/2, my=(fy+ty)/2;
+    svg+=`<line x1="${fx}" y1="${fy}" x2="${tx}" y2="${ty}" stroke="#c4b5fd" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+    svg+=`<text x="${mx}" y="${my-4}" text-anchor="middle" font-size="9" fill="#8b5cf6">${r.type}</text>`;
+  });
+  
+  // Draw character nodes
+  chars.forEach((c,i)=>{
+    const ang=angleStep*i-Math.PI/2;
+    const x=cx+radius*Math.cos(ang), y=cy+radius*Math.sin(ang);
+    const emoji=roleEmoji(c.role);
+    const colorMap={'主角':'#f59e0b','配角':'#3b82f6','反派':'#ef4444'};
+    const bg=colorMap[c.role]||'#8b5cf6';
+    svg+=`<g style="cursor:pointer" onclick="showCharacter('${c.name.replace(/'/g,"\\'")}')">
+      <circle cx="${x}" cy="${y-14}" r="24" fill="${bg}" opacity="0.9"/>
+      <text x="${x}" y="${y-8}" text-anchor="middle" font-size="18" fill="white">${emoji}</text>
+      <text x="${x}" y="${y+16}" text-anchor="middle" font-size="10" fill="#555" font-weight="500">${c.name}</text>
+    </g>`;
+  });
+  
+  svg+='</svg>';
+  el.innerHTML=svg;
+}
+
+function roleEmoji(role){
+  const map={'主角':'⭐','配角':'🔹','反派':'💀','':'👤'};
+  return map[role]||'👤';
+}
+
+function showAddCharacter(){
+  document.getElementById('ac-name').value='';
+  document.getElementById('ac-desc').value='';
+  document.getElementById('ac-role').value='配角';
+  document.getElementById('modal-add-char').classList.add('show');
+}
+
+function addCharacter(){
+  const name=document.getElementById('ac-name').value.trim();
+  if(!name){alert('请输入角色名');return}
+  const role=document.getElementById('ac-role').value;
+  const desc=document.getElementById('ac-desc').value.trim();
+  closeModal('modal-add-char');
+  api('/api/story/'+sid+'/characters','POST',{name,role,description:desc}).then(d=>{
+    if(d.status==='ok'){refreshCharacters();refresh()}
+    else alert(d.detail||'添加失败');
+  });
+}
+
+function deleteCharacter(name){
+  if(!confirm(`删除角色「${name}」？`))return;
+  api('/api/story/'+sid+'/characters/'+encodeURIComponent(name),'DELETE').then(()=>{
+    if(currentCharName===name){currentCharName=null;showCharGraph()}
+    refreshCharacters();refresh();
+  });
+}
+
+// Character editing
+function editCurrentChar(){
+  if(!currentCharName)return;
+  api('/api/story/'+sid+'/characters').then(d=>{
+    const c=d.characters?.find(x=>x.name===currentCharName);
+    if(!c)return;
+    document.getElementById('ce-name').value=c.name;
+    document.getElementById('ce-role').value=c.role||'配角';
+    document.getElementById('ce-desc').value=c.description||'';
+    document.getElementById('ce-goal').value=c.goal||'';
+    document.getElementById('ce-bg').value=c.background||'';
+    
+    // Render relations editor
+    const rels=c.relationships||[];
+    const otherChars=(d.characters||[]).filter(x=>x.name!==c.name);
+    const relEl=document.getElementById('ce-relations');
+    if(otherChars.length){
+      relEl.innerHTML=rels.map((r,i)=>`
+        <div style="display:flex;gap:4px;margin-bottom:3px;align-items:center">
+          <select class="ce-rel-with" style="flex:1;padding:3px 6px;border:1px solid #e5e7eb;border-radius:3px;font-size:11px">
+            <option value="">— 选择角色 —</option>
+            ${otherChars.map(oc=>`<option value="${oc.name}" ${r.with_name===oc.name?'selected':''}>${oc.name}</option>`).join('')}
+          </select>
+          <input class="ce-rel-type" value="${r.type||''}" placeholder="关系" style="width:60px;padding:3px 4px;border:1px solid #e5e7eb;border-radius:3px;font-size:11px">
+          <button class="btn btn-xs btn-s" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      `).join('');
+    }else{
+      relEl.innerHTML='<div style="font-size:11px;color:#999">没有其他角色可建立关系</div>';
+    }
+    relEl.innerHTML+=`<button class="btn btn-xs btn-s" onclick="addRelationRow()" style="margin-top:2px">➕ 添加关系</button>`;
+    
+    document.getElementById('rp-char-edit').classList.remove('hidden');
+  });
+}
+
+function addRelationRow(){
+  const relEl=document.getElementById('ce-relations');
+  const addBtn=relEl.querySelector('button:last-child');
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:4px;margin-bottom:3px;align-items:center';
+  row.innerHTML=`
+    <select class="ce-rel-with" style="flex:1;padding:3px 6px;border:1px solid #e5e7eb;border-radius:3px;font-size:11px">
+      <option value="">— 选择角色 —</option>
+      ${document.querySelectorAll('#ce-relations select.ce-rel-with').length?document.querySelector('#ce-relations select.ce-rel-with').innerHTML.replace(/selected/g,''):''}
+    </select>
+    <input class="ce-rel-type" placeholder="关系" style="width:60px;padding:3px 4px;border:1px solid #e5e7eb;border-radius:3px;font-size:11px">
+    <button class="btn btn-xs btn-s" onclick="this.parentElement.remove()">✕</button>
+  `;
+  relEl.insertBefore(row, addBtn);
+}
+
+function saveCharEdit(){
+  const name=document.getElementById('ce-name').value.trim();
+  if(!name)return;
+  const role=document.getElementById('ce-role').value;
+  const desc=document.getElementById('ce-desc').value.trim();
+  const goal=document.getElementById('ce-goal').value.trim();
+  const bg=document.getElementById('ce-bg').value.trim();
+  
+  const relRows=document.querySelectorAll('#ce-relations > div');
+  const relationships=[];
+  relRows.forEach(row=>{
+    const sel=row.querySelector('.ce-rel-with');
+    const typ=row.querySelector('.ce-rel-type');
+    if(sel&&typ&&sel.value){
+      relationships.push({with_name:sel.value,type:typ.value||'关联',description:''});
+    }
+  });
+  
+  api('/api/story/'+sid+'/characters/'+encodeURIComponent(currentCharName),'PUT',
+    {name,role,description:desc,goal,background:bg,relationships}).then(d=>{
+    if(d.status==='ok'){
+      currentCharName=name;
+      document.getElementById('rp-char-edit').classList.add('hidden');
+      showCharacter(name);
+      refresh();
+    }else alert(d.detail||'保存失败');
+  });
+}
+
+function cancelCharEdit(){
+  document.getElementById('rp-char-edit').classList.add('hidden');
+  if(currentCharName) showCharacter(currentCharName);
+}
+
+// ====== Utils ======
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+</script></body></html>

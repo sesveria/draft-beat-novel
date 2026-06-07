@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#6c63ff"/>
+    </marker>
+    <marker id="arrow-dashed" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#aaa"/>
+    </marker>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fef3c7"/>
+      <stop offset="100%" style="stop-color:#fde68a"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#eef0ff"/>
+      <stop offset="100%" style="stop-color:#ddd6fe"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe"/>
+      <stop offset="100%" style="stop-color:#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d1fae5"/>
+      <stop offset="100%" style="stop-color:#a7f3d0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a1a2e">故事创作管道架构 v3</text>
+
+  <!-- Layer indicators -->
+  <text x="30" y="60" font-size="11" fill="#999" font-weight="500">原始层</text>
+  <text x="30" y="185" font-size="11" fill="#999" font-weight="500">框架层</text>
+  <text x="30" y="370" font-size="11" fill="#999" font-weight="500">写作层</text>
+  <text x="30" y="520" font-size="11" fill="#999" font-weight="500">结构层</text>
+
+  <!-- Stage dividers -->
+  <line x1="20" y1="68" x2="880" y2="68" stroke="#eee" stroke-width="1"/>
+  <line x1="20" y1="195" x2="880" y2="195" stroke="#eee" stroke-width="1"/>
+  <line x1="20" y1="380" x2="880" y2="380" stroke="#eee" stroke-width="1"/>
+  <line x1="20" y1="530" x2="880" y2="530" stroke="#eee" stroke-width="1"/>
+
+  <!-- ====== Stage 1: 原始想法 ====== -->
+  <rect x="60" y="80" width="180" height="90" rx="10" fill="url(#g1)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="110" y="107" font-size="14" font-weight="bold" fill="#92400e">🗂️ 原始想法</text>
+  <text x="80" y="128" font-size="11" fill="#92400e">• 对话捕获</text>
+  <text x="80" y="145" font-size="11" fill="#92400e">• AI建议暂存</text>
+  <text x="80" y="162" font-size="11" fill="#92400e">• 用户随手记</text>
+
+  <rect x="290" y="80" width="180" height="90" rx="10" fill="url(#g1)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="340" y="107" font-size="14" font-weight="bold" fill="#92400e">📝 草稿箱</text>
+  <text x="310" y="128" font-size="11" fill="#92400e">• 多份草稿，可查看/编辑</text>
+  <text x="310" y="145" font-size="11" fill="#92400e">• AI辅助修改</text>
+  <text x="310" y="162" font-size="11" fill="#92400e">• ☑️ 选择 → 生成节拍板</text>
+
+  <!-- Arrow: Ideas → Draft -->
+  <line x1="240" y1="125" x2="285" y2="125" stroke="#6c63ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="255" y="117" font-size="10" fill="#6c63ff" text-anchor="middle">收录</text>
+
+  <!-- ====== Stage 2: 节拍板 ====== -->
+  <rect x="60" y="210" width="410" height="90" rx="10" fill="url(#g2)" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="110" y="237" font-size="14" font-weight="bold" fill="#4338ca">📅 节拍板</text>
+  <text x="80" y="258" font-size="11" fill="#4338ca">• 由选中的草稿自动生成节拍</text>
+  <text x="80" y="275" font-size="11" fill="#4338ca">• 可增删改、AI修改、重新排序</text>
+  <text x="80" y="292" font-size="11" fill="#4338ca">• ☑️ 选择节拍 → 生成章节</text>
+
+  <!-- Arrow: Draft → Beat -->
+  <line x1="380" y1="170" x2="300" y2="207" stroke="#6c63ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="370" y="195" font-size="10" fill="#6c63ff" text-anchor="middle">选择草稿 → 生成</text>
+
+  <!-- ====== Stage 3: 章节 ====== -->
+  <rect x="60" y="395" width="410" height="110" rx="10" fill="url(#g3)" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="110" y="422" font-size="14" font-weight="bold" fill="#1d4ed8">📖 章节列表</text>
+  <text x="80" y="443" font-size="11" fill="#1d4ed8">• 由选中的节拍 + 已有章节梗概 生成</text>
+  <text x="80" y="460" font-size="11" fill="#1d4ed8">• 每章独立阶段流转（草稿→初稿→修改→审核→发布）</text>
+  <text x="80" y="477" font-size="11" fill="#1d4ed8">• 每章有梗概(summary) + 正文(prose)</text>
+  <text x="80" y="494" font-size="11" fill="#1d4ed8">• ✏️ AI修改正文</text>
+
+  <!-- Arrow: Beat → Chapter -->
+  <line x1="265" y1="300" x2="265" y2="392" stroke="#6c63ff" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="280" y="350" font-size="10" fill="#6c63ff">选择节拍 + 前章梗概 → 生成</text>
+
+  <!-- ====== Stage 4: 大纲 ====== -->
+  <rect x="60" y="545" width="410" height="55" rx="10" fill="url(#g4)" stroke="#059669" stroke-width="1.5"/>
+  <text x="110" y="570" font-size="14" font-weight="bold" fill="#065f46">📋 故事大纲</text>
+  <text x="80" y="590" font-size="11" fill="#065f46">• 由已确定章节自动生成 • 可手动编辑调整 • ✏️ AI修改</text>
+
+  <!-- Arrow: Chapter → Outline -->
+  <line x1="265" y1="505" x2="265" y2="542" stroke="#aaa" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrow-dashed)"/>
+  <text x="280" y="528" font-size="10" fill="#999">自动从已确定章节更新</text>
+
+  <!-- ====== Right: Feedback loop ====== -->
+  <rect x="540" y="80" width="320" height="250" rx="12" fill="white" stroke="#e5e7eb" stroke-width="1.5"/>
+  <text x="700" y="108" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">🔄 贯穿全流程的能力</text>
+
+  <text x="560" y="138" font-size="12" fill="#555">1. ✏️ 每级都可独立 AI 修改</text>
+  <text x="560" y="160" font-size="12" fill="#555">2. ◀ 允许回退到上一级重做</text>
+  <text x="560" y="182" font-size="12" fill="#555">3. 🔗 下级引用上级的梗概/摘要</text>
+  <text x="560" y="204" font-size="12" fill="#555">4. 📌 用户自主选择「哪些→哪些」</text>
+  <text x="560" y="226" font-size="12" fill="#555">5. 🎯 不同粒度修改同一处故事</text>
+
+  <line x1="560" y1="245" x2="840" y2="245" stroke="#eee" stroke-width="1"/>
+  <text x="560" y="268" font-size="12" font-weight="500" fill="#6c63ff">生成时自动注入的上下文：</text>
+  <text x="560" y="290" font-size="11" fill="#666">草稿→节拍：已有角色/世界观 + 选中草稿</text>
+  <text x="560" y="310" font-size="11" fill="#666">节拍→章节：选中节拍 + 前几章梗概 + 大纲</text>
+  <text x="560" y="330" font-size="11" fill="#666">章节→大纲：所有已发布/审核章节梗概</text>
+
+  <!-- Extra: Character / World -->
+  <rect x="540" y="355" width="320" height="60" rx="10" fill="#f8f9ff" stroke="#e8e8ff" stroke-width="1"/>
+  <text x="700" y="380" text-anchor="middle" font-size="12" font-weight="500" fill="#4338ca">🏛️ 全局设定库</text>
+  <text x="560" y="400" font-size="11" fill="#666">角色 · 地点 · 世界观 · 关系网 — 所有阶段共享</text>
+
+  <!-- Legend -->
+  <rect x="540" y="440" width="320" height="155" rx="10" fill="#fafafa" stroke="#eee" stroke-width="1"/>
+  <text x="700" y="465" text-anchor="middle" font-size="12" font-weight="500" fill="#333">📋 用户操作流程</text>
+  <text x="560" y="490" font-size="11" fill="#555">1. 写想法 / 捕获对话 → 草稿箱</text>
+  <text x="560" y="510" font-size="11" fill="#555">2. ☑ 勾选草稿 → 「生成节拍板」</text>
+  <text x="560" y="530" font-size="11" fill="#555">3. ☑ 勾选节拍 + 选前章参考 → 「生成章节」</text>
+  <text x="560" y="550" font-size="11" fill="#555">4. 章节梗概 → 自动更新大纲</text>
+  <text x="560" y="570" font-size="11" fill="#555">5. 任意阶段点 ✏️ → AI 修改</text>
+  <text x="560" y="590" font-size="11" fill="#555">6. 不满意可回退到上级重新生成</text>
+</svg>
