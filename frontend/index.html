@@ -964,6 +964,8 @@ function batchDeleteStories(){
   if(!confirm(`确定删除选中的 ${cnt} 部作品？\n\n此操作不可恢复。`))return;
   const ids=[...selectedStories];
   selectedStories.clear();
+  document.getElementById('select-all-cb').checked=false;
+  updateBatchBar();
   Promise.all(ids.map(id=>
     fetch('/api/story/'+id,{method:'DELETE'}).then(r=>r.json())
   )).then(()=>{
@@ -1201,6 +1203,8 @@ function continueStory(sid_){
 }
 function deleteSavedStory(sid_, title){
   if(!confirm(`确定删除「${title}」？\n\n此操作不可恢复。`))return;
+  selectedStories.delete(sid_);
+  updateBatchBar();
   fetch('/api/story/'+sid_,{method:'DELETE'}).then(r=>r.json()).then(d=>{
     if(d.status==='ok') loadSavedStories();
     else alert('删除失败');
