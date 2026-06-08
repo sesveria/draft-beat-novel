@@ -38,7 +38,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ==================== HEADER ==================== */
 .topbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 20px;height:52px;background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.15);z-index:10}
-.topbar-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:.3px;flex-shrink:0}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:.3px;flex-shrink:0;cursor:pointer;user-select:none}
 .topbar-logo span{font-size:20px}
 .topbar-badge{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;color:#c4b5fd}
 
@@ -126,6 +126,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .saved-item .si-stats{font-size:10px;color:var(--text-muted);flex-shrink:0}
 .saved-item .si-del{font-size:14px;padding:2px 5px;border:none;background:none;color:var(--text-muted);cursor:pointer;border-radius:4px;flex-shrink:0;transition:all .12s}
 .saved-item .si-del:hover{color:var(--red);background:#fef2f2}
+.saved-item .si-cb{width:16px;height:16px;cursor:pointer;flex-shrink:0;accent-color:var(--accent)}
+
+/* Batch action bar */
+.batch-bar{display:none;align-items:center;gap:8px;padding:8px 16px;background:var(--accent-light);border-bottom:1px solid #ddd6fe;font-size:12px;color:var(--text)}
+.batch-bar.show{display:flex}
+.batch-bar .bb-label{flex:1;color:#5b21b6}
+.batch-bar .bb-btn{padding:4px 12px;border:1px solid #fca5a5;border-radius:5px;background:#fef2f2;color:var(--red);cursor:pointer;font-size:11px;font-family:var(--font);transition:all .12s}
+.batch-bar .bb-btn:hover{background:#fee2e2;border-color:var(--red)}
 
 /* ==================== WORKSPACE (main editing area) ==================== */
 .workspace{display:none;flex:1;overflow:hidden;padding:10px 14px 14px;gap:12px}
@@ -343,13 +351,7 @@ input,textarea{font-family:var(--font);color:var(--text)}
 .settings-section .ss-danger{padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-sm);margin-top:8px}
 .settings-section .ss-danger .btn{font-size:11px}
 
-/* ===== Workspace Empty State ===== */
-.workspace-empty{display:none;flex:1;align-items:center;justify-content:center;padding:40px 20px}
-.workspace-empty.show{display:flex}
-.workspace-empty .we-inner{text-align:center;color:var(--text-muted)}
-.workspace-empty .we-icon{font-size:56px;margin-bottom:12px;opacity:.4}
-.workspace-empty .we-title{font-size:16px;color:var(--text-soft);margin-bottom:6px}
-.workspace-empty .we-desc{font-size:13px;color:var(--text-muted);margin-bottom:16px}
+/* ===== AI result box ===== */
 .ai-result{display:none;background:#f8f9ff;border:1px solid #e0e7ff;border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;line-height:1.7;white-space:pre-wrap;margin-top:8px;max-height:240px;overflow-y:auto;color:var(--text)}
 .ai-result.show{display:block}
 
@@ -384,7 +386,7 @@ input,textarea{font-family:var(--font);color:var(--text)}
 
   <!-- ==================== TOP BAR ==================== -->
   <header class="topbar">
-    <div class="topbar-logo">
+    <div class="topbar-logo" onclick="resetAll()">
       <span>✍️</span>
       <span>故事创作助手</span>
       <span class="topbar-badge">v3</span>
@@ -481,6 +483,10 @@ input,textarea{font-family:var(--font);color:var(--text)}
               </label>
             </div>
             <div class="saved-list" id="saved-list"><span class="spin"></span> 加载中...</div>
+            <div class="batch-bar" id="batch-bar">
+              <span class="bb-label" id="batch-label">已选 0 部作品</span>
+              <button class="bb-btn" onclick="batchDeleteStories()">🗑️ 批量删除</button>
+            </div>
           </div>
         </div>
       </div>
@@ -488,15 +494,6 @@ input,textarea{font-family:var(--font);color:var(--text)}
   </div>
 
   <!-- ==================== WORKSPACE ==================== -->
-  <div class="workspace-empty" id="workspace-empty">
-    <div class="we-inner">
-      <div class="we-icon">📖</div>
-      <div class="we-title">还没有打开任何作品</div>
-      <div class="we-desc">选择一个已有作品或开启一个新故事</div>
-      <button class="btn btn-primary" onclick="resetAll()">✍️ 开启一个新故事</button>
-    </div>
-  </div>
-
   <div class="workspace" id="workspace">
 
     <!-- ===== SIDEBAR ===== -->
@@ -861,7 +858,7 @@ function switchHomeNav(tab){
 }
 
 // ====== Search / Filter / Sort ======
-let searchTimer=null, allStories=[];
+let searchTimer=null, allStories=[], selectedStories=new Set();
 function searchDebounce(){
   clearTimeout(searchTimer);
   searchTimer=setTimeout(applyFilters, 300);
@@ -908,6 +905,7 @@ function renderSavedList(stories){
   }
   el.innerHTML=stories.map(s=>`
     <div class="saved-item" onclick="continueStory('${s.id}')">
+      <input type="checkbox" class="si-cb" value="${s.id}" ${selectedStories.has(s.id)?'checked':''} onclick="event.stopPropagation();toggleSelectStory('${s.id}')">
       <span class="si-icon">${s.focused?'⭐':'📖'}</span>
       <div class="si-info">
         <div class="si-title"><strong>${s.title}</strong></div>
@@ -917,6 +915,41 @@ function renderSavedList(stories){
       <button class="si-del" onclick="event.stopPropagation();deleteSavedStory('${s.id}','${s.title.replace(/'/g,"\\'")}')" title="删除">✕</button>
     </div>
   `).join('');
+  updateBatchBar();
+}
+// Batch operations
+function toggleSelectStory(id){
+  if(selectedStories.has(id)) selectedStories.delete(id);
+  else selectedStories.add(id);
+  // Sync checkbox states
+  document.querySelectorAll('#saved-list .si-cb').forEach(cb=>{
+    if(selectedStories.has(cb.value)) cb.checked=true;
+    else cb.checked=false;
+  });
+  updateBatchBar();
+}
+function updateBatchBar(){
+  const bar=document.getElementById('batch-bar');
+  const label=document.getElementById('batch-label');
+  const cnt=selectedStories.size;
+  if(cnt>0){
+    bar.classList.add('show');
+    label.textContent=`已选 ${cnt} 部作品`;
+  }else{
+    bar.classList.remove('show');
+  }
+}
+function batchDeleteStories(){
+  const cnt=selectedStories.size;
+  if(!cnt)return;
+  if(!confirm(`确定删除选中的 ${cnt} 部作品？\n\n此操作不可恢复。`))return;
+  const ids=[...selectedStories];
+  selectedStories.clear();
+  Promise.all(ids.map(id=>
+    fetch('/api/story/'+id,{method:'DELETE'}).then(r=>r.json())
+  )).then(()=>{
+    loadSavedStories();
+  });
 }
 // Update genre filter options from loaded stories
 function updateGenreOptions(stories){
@@ -1094,7 +1127,6 @@ function refreshStoryInfo(){
 function startWriting(){
   document.getElementById('step-create').style.display='none';
   document.getElementById('home-nav').classList.remove('show');
-  document.getElementById('workspace-empty').classList.remove('show');
   document.getElementById('sbar').classList.add('show');
   document.getElementById('workspace').classList.add('show');
   refresh().then(()=>{
@@ -1109,7 +1141,6 @@ function resetAll(){
   switchHomeNav('new');
   document.getElementById('sbar').classList.remove('show');
   document.getElementById('workspace').classList.remove('show');
-  document.getElementById('workspace-empty').classList.add('show');
   document.getElementById('step-create').style.display='flex';
   document.querySelector('#new-story-body').style.display='';
   document.getElementById('raw-input').style.display='';
@@ -1132,6 +1163,7 @@ function toggleNewStory(){
 
 // ====== Saved Stories ======
 function loadSavedStories(){
+  selectedStories.clear();
   fetch('/api/stories').then(r=>r.json()).then(d=>{
     allStories=d.stories||[];
     updateGenreOptions(allStories);
