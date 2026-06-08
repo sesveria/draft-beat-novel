@@ -1,7 +1,7 @@
 """DeepSeek API 调用 - 支持多种写作模式"""
 import json
 import os
-import subprocess
+import requests
 
 def _get_api_key():
     key = os.environ.get("DEEPSEEK_API_KEY", "")
@@ -16,13 +16,15 @@ def _get_api_key():
                         break
     return key
 
+DEEPSEEK_API = "https://api.deepseek.com/chat/completions"
+
 def call_llm(system_prompt, user_prompt, temperature=0.7):
     """通用 LLM 调用"""
     api_key = _get_api_key()
     if not api_key:
         return ""
 
-    payload = json.dumps({
+    payload = {
         "model": "deepseek-v4-flash",
         "messages": [
             {"role": "system", "content": system_prompt},
@@ -30,27 +32,29 @@ def call_llm(system_prompt, user_prompt, temperature=0.7):
         ],
         "temperature": temperature,
         "max_tokens": 4096
-    })
+    }
 
-    auth = "Authorization: Bearer " + api_key
-    result = subprocess.run(
-        ["curl", "-s", "-X", "POST",
-         "https://api.deepseek.com/chat/completions",
-         "-H", "Content-Type: application/json",
-         "-H", auth,
-         "-d", payload],
-        capture_output=True, text=True, timeout=60
-    )
     try:
-        resp = json.loads(result.stdout)
-        return resp["choices"][0]["message"]["content"]
+        resp = requests.post(
+            DEEPSEEK_API,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=60,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
     except Exception as e:
-        return f""
+        print(f"[llm] API 调用失败: {e}")
+        return ""
 
 def generate_prose(framework, scene_id=None, direction="", mode="continue", extra_context=""):
     """根据模式生成正文"""
     context = extra_context or _build_context(framework, scene_id)
-    
+
     mode_configs = {
         "continue": {
             "system": "你是一个故事作家。根据故事设定和当前写作方向，续写一段生动的故事正文。\n要求：中文，有画面感，加入感官细节，适当对话，保持角色性格，300-500字。",
@@ -81,27 +85,29 @@ def generate_prose(framework, scene_id=None, direction="", mode="continue", extr
             "user": f"故事设定：\n{context}\n\n正文：\n{direction}\n\n请分析："
         }
     }
-    
+
     config = mode_configs.get(mode, mode_configs["continue"])
-    return call_llm(config["system"], config["user"], 
+    return call_llm(config["system"], config["user"],
                     temperature=0.8 if mode in ["continue", "direct", "brainstorm"] else 0.4)
 
 def _build_context(framework, scene_id=None):
     """构建故事上下文"""
     parts = [f"故事：{framework.title}", f"题材：{framework.genre}", f"基调：{framework.tone}"]
-    
+
     if framework.characters:
         parts.append("\n角色：")
         for c in framework.characters:
             parts.append(f"  {c.name}（{c.role}）：{c.description} 目标：{c.goal}")
-    
-    if framework.scenes:
+
+    # Legacy scene support — only used if no chapters/beats
+    scenes = getattr(framework, 'scenes', None) or getattr(framework, '_legacy_scenes', None)
+    if scenes:
         parts.append("\n故事场景：")
-        for s in framework.scenes:
-            marker = "【当前】" if s.id == scene_id else ""
-            status_icon = {"draft": "📝", "writing": "✍️", "done": "✅"}.get(s.status, "📝")
-            parts.append(f"  {status_icon} {s.order+1}. {s.title} — {s.description} {marker}")
-    
+        for s in scenes:
+            marker = "【当前】" if getattr(s, 'id', None) == scene_id else ""
+            status_icon = {"draft": "📝", "writing": "✍️", "done": "✅"}.get(getattr(s, 'status', 'draft'), "📝")
+            parts.append(f"  {status_icon} {getattr(s, 'order', 0)+1}. {getattr(s, 'title', '?')} — {getattr(s, 'description', '')} {marker}")
+
     return "\n".join(parts)
 
 

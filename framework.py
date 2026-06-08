@@ -191,7 +191,7 @@ class StoryFramework:
     @classmethod
     def from_dict(cls, d):
         fw = cls(title=d.get("title", ""), genre=d.get("genre", ""), tone=d.get("tone", ""))
-        fw.characters = [Character(**c) for c in d.get("characters", [])]
+        fw.characters = [Character(**{k: v for k, v in c.items() if k in Character.__dataclass_fields__}) for c in d.get("characters", [])]
         for dd in d.get("drafts", []):
             fw.drafts.append(DraftItem(**{k: v for k, v in dd.items() if k in DraftItem.__dataclass_fields__}))
         for b in d.get("beats", []) or d.get("_legacy_scenes", d.get("scenes", [])):
