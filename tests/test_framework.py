@@ -58,6 +58,42 @@ class TestSerialization:
         assert fw2.characters == []
         assert fw2.drafts == []
         assert fw2.beats == []
+
+    def test_roundtrip_focused(self, fw_with_data):
+        fw_with_data.focused = True
+        data = fw_with_data.to_dict()
+        fw2 = StoryFramework.from_dict(data)
+        assert fw2.focused is True
+        assert data["focused"] is True
+
+    def test_focused_default_false(self, empty_fw):
+        assert empty_fw.focused is False
+
+    def test_focused_roundtrip_false(self, empty_fw):
+        data = empty_fw.to_dict()
+        assert data["focused"] is False
+        fw2 = StoryFramework.from_dict(data)
+        assert fw2.focused is False
+
+    def test_focused_legacy_data(self):
+        """旧数据没有 focused 字段，应该默认为 False"""
+        data = {"title": "旧故事", "genre": "科幻", "tone": "悬疑"}
+        fw = StoryFramework.from_dict(data)
+        assert fw.focused is False
+
+    def test_focused_serialize_toggle(self, empty_fw):
+        empty_fw.focused = True
+        data = empty_fw.to_dict()
+        assert data["focused"] is True
+        fw2 = StoryFramework.from_dict(data)
+        assert fw2.focused is True
+        fw2.focused = False
+        data2 = fw2.to_dict()
+        assert data2["focused"] is False
+
+    def test_roundtrip_empty_framework_chapters(self, empty_fw):
+        data = empty_fw.to_dict()
+        fw2 = StoryFramework.from_dict(data)
         assert fw2.chapters == []
 
 

@@ -84,3 +84,9 @@ class CharUpdate(BaseModel):
     goal: str = ""
     relationship: str = ""
     relationships: list = []
+
+
+class SettingsUpdate(BaseModel):
+    title: str = ""
+    genre: str = ""
+    tone: str = ""

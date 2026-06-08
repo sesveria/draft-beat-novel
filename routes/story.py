@@ -6,7 +6,7 @@ import time
 from fastapi import APIRouter, HTTPException
 from services.storage import _fw, _save, active_stories, STORAGE_DIR
 from services.context import _detail
-from models import CreateReq, RefineReq
+from models import CreateReq, RefineReq, SettingsUpdate
 from comprehension import understand_idea, build_framework, refine_understanding
 from llm import call_llm
 import uuid
@@ -55,6 +55,7 @@ def list_stories():
                         "title": d.get("title", "?"),
                         "genre": d.get("genre", ""),
                         "tone": d.get("tone", ""),
+                        "focused": d.get("focused", False),
                         "drafts": len(d.get("drafts", [])),
                         "beats": len(d.get("beats", [])),
                         "chapters": len(d.get("chapters", [])),
@@ -77,6 +78,33 @@ def delete_story(sid: str):
     # 从内存缓存中移除
     active_stories.pop(sid, None)
     return {"status": "ok", "deleted": sid}
+
+
+@router.post("/api/story/{sid}/focus")
+def toggle_focus(sid: str):
+    """切换焦点状态"""
+    fw = _fw(sid)
+    if not fw:
+        raise HTTPException(404)
+    fw.focused = not fw.focused
+    _save(fw, sid)
+    return {"status": "ok", "focused": fw.focused}
+
+
+@router.post("/api/story/{sid}/settings")
+def update_settings(sid: str, req: SettingsUpdate):
+    """更新作品信息（标题/体裁/基调）"""
+    fw = _fw(sid)
+    if not fw:
+        raise HTTPException(404)
+    if req.title:
+        fw.title = req.title
+    if req.genre:
+        fw.genre = req.genre
+    if req.tone:
+        fw.tone = req.tone
+    _save(fw, sid)
+    return {"status": "ok", "title": fw.title, "genre": fw.genre, "tone": fw.tone}
 
 
 @router.post("/api/story/{sid}/refine")

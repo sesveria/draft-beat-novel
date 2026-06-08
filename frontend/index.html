@@ -52,6 +52,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .ts-new{font-size:11px;padding:4px 12px;border:1px solid rgba(255,255,255,.25);border-radius:6px;background:transparent;color:#c4b5fd;cursor:pointer;font-family:var(--font);flex-shrink:0;transition:all .15s}
 .ts-new:hover{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.4)}
 
+/* ==================== HOME NAV ==================== */
+.home-nav{flex-shrink:0;display:none;align-items:stretch;background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;gap:0}
+.home-nav.show{display:flex}
+.home-nav-btn{padding:10px 20px;border:none;background:transparent;cursor:pointer;font-size:13px;font-family:var(--font);color:var(--text-soft);border-bottom:2px solid transparent;transition:all .12s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.home-nav-btn:hover{color:var(--text);background:#f8fafc}
+.home-nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+
 /* ==================== STEP-CREATE (start page) ==================== */
 .step-create{flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:28px 20px}
 .step-create-inner{max-width:580px;width:100%;margin:0 auto}
@@ -91,7 +98,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .refine-area textarea:focus{outline:none;border-color:var(--accent)}
 
 /* ==================== SAVED STORIES ==================== */
-.saved-stories{max-width:580px;width:100%;margin-top:12px}
+.saved-stories{max-width:580px;width:100%;margin:0 auto}
+
+/* Search / Filter / Sort bar */
+.search-bar{display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.search-bar .sb-input-wrap{flex:1;min-width:150px;position:relative}
+.search-bar .sb-input-wrap input{width:100%;padding:7px 30px 7px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--font);transition:border-color .15s}
+.search-bar .sb-input-wrap input:focus{outline:none;border-color:var(--accent)}
+.search-bar .sb-input-wrap .sb-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:2px;line-height:1}
+.search-bar .sb-input-wrap .sb-clear:hover{color:var(--text)}
+.search-bar select{padding:7px 10px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer;transition:border-color .15s}
+.search-bar select:focus{outline:none;border-color:var(--accent)}
+.search-bar .sb-checkbox{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-soft);white-space:nowrap;cursor:pointer}
+.search-bar .sb-checkbox input{width:14px;height:14px;cursor:pointer;accent-color:var(--accent)}
 .saved-card{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);border:1px solid var(--border);padding:0;overflow:hidden}
 .saved-card-header{display:flex;align-items:center;gap:8px;padding:14px 16px}
 .saved-card-header h3{font-size:14px;margin:0;flex:1}
@@ -304,7 +323,33 @@ input,textarea{font-family:var(--font);color:var(--text)}
 .char-edit-form input,.char-edit-form select,.char-edit-form textarea{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;margin-bottom:5px}
 .char-edit-form select{background:var(--surface)}
 
-/* ===== AI result box ===== */
+/* ===== Toggle Switch ===== */
+.toggle-wrap{display:flex;align-items:center;gap:10px;padding:8px 0}
+.toggle-wrap .toggle-label{font-size:13px;color:var(--text);flex:1}
+.toggle-switch{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:22px;transition:background .15s}
+.toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .15s}
+.toggle-switch input:checked+.toggle-slider{background:var(--accent)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(18px)}
+.toggle-status{font-size:11px;color:var(--text-muted)}
+
+/* Settings modal */
+.settings-section{margin-bottom:16px}
+.settings-section .ss-title{font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.settings-section .ss-desc{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+.settings-section input,.settings-section select{width:100%;padding:7px 10px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--font);margin-bottom:4px;transition:border-color .15s}
+.settings-section input:focus,.settings-section select:focus{outline:none;border-color:var(--accent)}
+.settings-section .ss-danger{padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-sm);margin-top:8px}
+.settings-section .ss-danger .btn{font-size:11px}
+
+/* ===== Workspace Empty State ===== */
+.workspace-empty{display:none;flex:1;align-items:center;justify-content:center;padding:40px 20px}
+.workspace-empty.show{display:flex}
+.workspace-empty .we-inner{text-align:center;color:var(--text-muted)}
+.workspace-empty .we-icon{font-size:56px;margin-bottom:12px;opacity:.4}
+.workspace-empty .we-title{font-size:16px;color:var(--text-soft);margin-bottom:6px}
+.workspace-empty .we-desc{font-size:13px;color:var(--text-muted);margin-bottom:16px}
 .ai-result{display:none;background:#f8f9ff;border:1px solid #e0e7ff;border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;line-height:1.7;white-space:pre-wrap;margin-top:8px;max-height:240px;overflow-y:auto;color:var(--text)}
 .ai-result.show{display:block}
 
@@ -345,69 +390,113 @@ input,textarea{font-family:var(--font);color:var(--text)}
       <span class="topbar-badge">v3</span>
     </div>
     <div class="topbar-story" id="sbar">
-      <span class="ts-title" id="sb-title"></span>
-      <span class="ts-genre" id="sb-genre"></span>
-      <span class="ts-chars" id="sb-chars"></span>
-      <span class="ts-stats" id="sb-stats"></span>
-      <button class="ts-new" onclick="resetAll()">✏️ 新故事</button>
+    <span class="ts-title" id="sb-title"></span>
+    <span class="ts-genre" id="sb-genre"></span>
+    <span class="ts-chars" id="sb-chars"></span>
+    <span class="ts-stats" id="sb-stats"></span>
+    <button class="ts-new" id="sbar-focus" onclick="toggleFocus()" title="焦点作品" style="font-size:14px;padding:2px 6px;border:none;background:transparent;cursor:pointer">⭐</button>
+    <button class="ts-new" onclick="openSettings()" title="作品设置" style="font-size:14px;padding:2px 6px;border:none;background:transparent;cursor:pointer">⚙️</button>
+    <button class="ts-new" onclick="resetAll()">✏️ 新故事</button>
     </div>
   </header>
+
+  <!-- ==================== HOME NAV ==================== -->
+  <div class="home-nav show" id="home-nav">
+    <button class="home-nav-btn active" data-home="new" onclick="switchHomeTab(this)">✍️ 开启新故事</button>
+    <button class="home-nav-btn" data-home="saved" onclick="switchHomeTab(this)">📚 已有作品</button>
+  </div>
 
   <!-- ==================== START PAGE ==================== -->
   <div class="step-create" id="step-create" style="display:flex">
     <div class="step-create-inner">
-      <!-- Create card / New story -->
-      <div class="create-card">
-        <div class="create-card-header">
-          <div class="cch-icon">✍️</div>
-          <div class="cch-text">
-            <h2>开启新故事</h2>
-            <p class="subtitle">随意写下你的想法——一段剧情、几个关键词、一个场景，怎么写都行</p>
-          </div>
-          <button class="cch-collapse" id="btn-new-toggle" onclick="toggleNewStory()" title="收起">−</button>
-        </div>
-        <div id="new-story-body">
-          <textarea id="raw-input" placeholder="把你脑中的故事写下来...&#10;&#10;可以是一段剧情、几个关键词、一个场景或角色设定&#10;怎么写都行，不用讲究格式"></textarea>
-          <div class="create-actions">
-            <button class="btn btn-primary" onclick="createStory()">✨ 帮我理清思路</button>
-          </div>
-          <!-- Confirm area -->
-          <div class="confirm-area" id="confirm-area">
-            <div class="confirm-card" id="confirm-html"></div>
-            <div class="questions-area" id="questions-html"></div>
-            <div class="create-actions">
-              <button class="btn btn-primary" onclick="startWriting()" style="background:var(--green)">✅ 没错，开始写吧！</button>
-              <button class="btn btn-secondary" onclick="showRefine()">✏️ 补充细节</button>
-              <button class="btn btn-secondary" onclick="resetAll()">🔄 重新来</button>
+      <!-- 子页面: 开启新故事 -->
+      <div id="home-page-new">
+        <div class="create-card">
+          <div class="create-card-header">
+            <div class="cch-icon">✍️</div>
+            <div class="cch-text">
+              <h2>开启新故事</h2>
+              <p class="subtitle">随意写下你的想法——一段剧情、几个关键词、一个场景，怎么写都行</p>
             </div>
-            <!-- Refine area -->
-            <div class="refine-area" id="refine-area">
-              <div style="font-weight:500;font-size:13px;margin-bottom:6px">❓ AI 想了解一些细节：</div>
-              <div id="refine-questions" style="margin-bottom:6px"><span class="spin"></span> 生成追问中...</div>
-              <textarea id="refine-input" placeholder="或者直接在这里补充..."></textarea>
-              <div class="create-actions" style="margin-top:4px">
-                <button class="btn btn-primary btn-sm" onclick="refineStory()">回答 / 确认补充</button>
-                <button class="btn btn-secondary btn-sm" onclick="generateMoreQuestions()">🤔 换一批问题</button>
+            <button class="cch-collapse" id="btn-new-toggle" onclick="toggleNewStory()" title="收起">−</button>
+          </div>
+          <div id="new-story-body">
+            <textarea id="raw-input" placeholder="把你脑中的故事写下来...&#10;&#10;可以是一段剧情、几个关键词、一个场景或角色设定&#10;怎么写都行，不用讲究格式"></textarea>
+            <div class="create-actions">
+              <button class="btn btn-primary" onclick="createStory()">✨ 帮我理清思路</button>
+            </div>
+            <!-- Confirm area -->
+            <div class="confirm-area" id="confirm-area">
+              <div class="confirm-card" id="confirm-html"></div>
+              <div class="questions-area" id="questions-html"></div>
+              <div class="create-actions">
+                <button class="btn btn-primary" onclick="startWriting()" style="background:var(--green)">✅ 没错，开始写吧！</button>
+                <button class="btn btn-secondary" onclick="showRefine()">✏️ 补充细节</button>
+                <button class="btn btn-secondary" onclick="resetAll()">🔄 重新来</button>
+              </div>
+              <!-- Refine area -->
+              <div class="refine-area" id="refine-area">
+                <div style="font-weight:500;font-size:13px;margin-bottom:6px">❓ AI 想了解一些细节：</div>
+                <div id="refine-questions" style="margin-bottom:6px"><span class="spin"></span> 生成追问中...</div>
+                <textarea id="refine-input" placeholder="或者直接在这里补充..."></textarea>
+                <div class="create-actions" style="margin-top:4px">
+                  <button class="btn btn-primary btn-sm" onclick="refineStory()">回答 / 确认补充</button>
+                  <button class="btn btn-secondary btn-sm" onclick="generateMoreQuestions()">🤔 换一批问题</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Saved stories -->
-      <div class="saved-stories" id="saved-stories">
-        <div class="saved-card">
-          <div class="saved-card-header">
-            <h3><span>📚</span> 继续已有作品</h3>
-            <button class="btn btn-secondary btn-xs" onclick="resetAll()">➕ 开启新故事</button>
+      <!-- 子页面: 已有作品 -->
+      <div id="home-page-saved" style="display:none">
+        <div class="saved-stories">
+          <div class="saved-card">
+            <div class="saved-card-header">
+              <h3><span>📚</span> 已有作品</h3>
+              <button class="btn btn-secondary btn-xs" onclick="switchHomeNav('new')">✍️ 开启新故事</button>
+            </div>
+            <!-- Search / Filter / Sort bar -->
+            <div style="padding:0 16px 4px">
+              <div class="search-bar">
+                <div class="sb-input-wrap">
+                  <input id="search-input" placeholder="搜索作品名称..." oninput="searchDebounce()">
+                  <button class="sb-clear" onclick="clearSearch()" id="search-clear" style="display:none">✕</button>
+                </div>
+                <select id="filter-genre" onchange="applyFilters()">
+                  <option value="">全部体裁</option>
+                </select>
+                <select id="sort-mode" onchange="applyFilters()">
+                  <option value="mtime_desc">最后修改 ↓</option>
+                  <option value="mtime_asc">最后修改 ↑</option>
+                  <option value="title_asc">标题 A-Z</option>
+                  <option value="title_desc">标题 Z-A</option>
+                  <option value="words_desc">字数 ↓</option>
+                  <option value="words_asc">字数 ↑</option>
+                </select>
+              </div>
+              <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-soft);cursor:pointer;margin-bottom:4px">
+                <input type="checkbox" id="filter-focused-only" onchange="applyFilters()"> 仅看焦点作品
+              </label>
+            </div>
+            <div class="saved-list" id="saved-list"><span class="spin"></span> 加载中...</div>
           </div>
-          <div class="saved-list" id="saved-list"><span class="spin"></span> 加载中...</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ==================== WORKSPACE ==================== -->
+  <div class="workspace-empty" id="workspace-empty">
+    <div class="we-inner">
+      <div class="we-icon">📖</div>
+      <div class="we-title">还没有打开任何作品</div>
+      <div class="we-desc">选择一个已有作品或开启一个新故事</div>
+      <button class="btn btn-primary" onclick="resetAll()">✍️ 开启一个新故事</button>
+    </div>
+  </div>
+
   <div class="workspace" id="workspace">
 
     <!-- ===== SIDEBAR ===== -->
@@ -738,6 +827,17 @@ input,textarea{font-family:var(--font);color:var(--text)}
     </div>
   </div>
 
+  <!-- ===== Settings Modal ===== -->
+  <div class="modal-overlay" id="modal-settings" onclick="if(event.target===this)closeSettings()">
+    <div class="modal" style="max-width:420px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">
+        <h3 style="margin:0;flex:1">⚙️ 作品设置</h3>
+        <button class="btn btn-secondary btn-xs" onclick="closeSettings()">✕</button>
+      </div>
+      <div id="settings-body"></div>
+    </div>
+  </div>
+
 </div><!-- /app -->
 
 <script>
@@ -745,6 +845,174 @@ let sid=null, cid=null, mode='continue', lastGen='', genTimer=null, currentTab='
 let rpDraftId=null, rpBeatId=null;
 
 function api(p,m,b){return fetch(p,{method:m||(b?'POST':'GET'),headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined}).then(r=>r.json())}
+
+// ====== Home Nav ======
+function switchHomeTab(btn){
+  document.querySelectorAll('.home-nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const tab=btn.dataset.home;
+  document.getElementById('home-page-new').style.display=tab==='new'?'':'none';
+  document.getElementById('home-page-saved').style.display=tab==='saved'?'':'none';
+  if(tab==='saved') loadSavedStories();
+}
+function switchHomeNav(tab){
+  const btn=document.querySelector(`.home-nav-btn[data-home="${tab}"]`);
+  if(btn) switchHomeTab(btn);
+}
+
+// ====== Search / Filter / Sort ======
+let searchTimer=null, allStories=[];
+function searchDebounce(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(applyFilters, 300);
+  document.getElementById('search-clear').style.display=document.getElementById('search-input').value?'block':'none';
+}
+function clearSearch(){
+  document.getElementById('search-input').value='';
+  document.getElementById('search-clear').style.display='none';
+  applyFilters();
+}
+function applyFilters(){
+  const q=document.getElementById('search-input').value.trim().toLowerCase();
+  const genre=document.getElementById('filter-genre').value;
+  const sort=document.getElementById('sort-mode').value;
+  const onlyFocused=document.getElementById('filter-focused-only').checked;
+  let filtered=allStories.filter(s=>{
+    if(q&&!s.title.toLowerCase().includes(q)) return false;
+    if(genre&&s.genre!==genre) return false;
+    if(onlyFocused&&!s.focused) return false;
+    return true;
+  });
+  // Sort: focused items always first
+  filtered.sort((a,b)=>{
+    // Focused items always come first
+    if(a.focused!==b.focused) return a.focused?-1:1;
+    // Secondary sort
+    switch(sort){
+      case 'mtime_desc': return (b.saved_at||0)-(a.saved_at||0);
+      case 'mtime_asc': return (a.saved_at||0)-(b.saved_at||0);
+      case 'title_asc': return (a.title||'').localeCompare(b.title||'', 'zh');
+      case 'title_desc': return (b.title||'').localeCompare(a.title||'', 'zh');
+      case 'words_desc': return (b.words||0)-(a.words||0);
+      case 'words_asc': return (a.words||0)-(b.words||0);
+      default: return 0;
+    }
+  });
+  renderSavedList(filtered);
+}
+function renderSavedList(stories){
+  const el=document.getElementById('saved-list');
+  if(!stories.length){
+    el.innerHTML='<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:13px"><div style="font-size:28px;margin-bottom:4px;opacity:.4">📚</div>没有匹配的作品</div>';
+    return;
+  }
+  el.innerHTML=stories.map(s=>`
+    <div class="saved-item" onclick="continueStory('${s.id}')">
+      <span class="si-icon">${s.focused?'⭐':'📖'}</span>
+      <div class="si-info">
+        <div class="si-title"><strong>${s.title}</strong></div>
+        <div class="si-meta">${s.focused?'⭐ 焦点 · ':''}${s.saved_at_str||''}${s.genre?' · '+s.genre:''}</div>
+      </div>
+      <span class="si-stats">${s.words||0}字 · ${s.chapters||0}章</span>
+      <button class="si-del" onclick="event.stopPropagation();deleteSavedStory('${s.id}','${s.title.replace(/'/g,"\\'")}')" title="删除">✕</button>
+    </div>
+  `).join('');
+}
+// Update genre filter options from loaded stories
+function updateGenreOptions(stories){
+  const sel=document.getElementById('filter-genre');
+  const genres=[...new Set(stories.map(s=>s.genre).filter(Boolean))].sort((a,b)=>a.localeCompare(b, 'zh'));
+  const current=sel.value;
+  sel.innerHTML='<option value="">全部体裁</option>'+genres.map(g=>`<option value="${g}" ${g===current?'selected':''}>${g}</option>`).join('');
+}
+
+// ====== Focus ======
+function toggleFocus(){
+  if(!sid)return;
+  api('/api/story/'+sid+'/focus','POST').then(d=>{
+    if(d.status==='ok') refresh();
+  });
+}
+
+// ====== Settings ======
+function openSettings(){
+  if(!sid)return;
+  api('/api/story/'+sid).then(d=>{
+    if(!d||d.detail)return;
+    const body=document.getElementById('settings-body');
+    const focused=d.focused;
+    body.innerHTML=`
+      <div class="settings-section">
+        <div class="ss-title">⭐ 焦点作品</div>
+        <div class="ss-desc">焦点作品在首页优先展示</div>
+        <div class="toggle-wrap">
+          <span class="toggle-label">在首页置顶展示</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="set-focused" ${focused?'checked':''} onchange="saveSettings()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-status" id="set-focused-status">${focused?'已开启':'已关闭'}</span>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">📖 作品信息</div>
+        <input id="set-title" value="${d.title.replace(/"/g,'&quot;')}" placeholder="标题">
+        <input id="set-genre" value="${d.genre.replace(/"/g,'&quot;')}" placeholder="体裁">
+        <input id="set-tone" value="${d.tone.replace(/"/g,'&quot;')}" placeholder="基调">
+        <div class="btn-group">
+          <button class="btn btn-primary btn-sm" onclick="saveSettings()">💾 保存信息</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">📊 作品数据</div>
+        <div style="font-size:12px;color:var(--text-soft);line-height:1.8">
+          <div>作品 ID: ${d.story_id}</div>
+          <div>草稿: ${d.stats?.total_drafts||0} · 节拍: ${d.stats?.total_beats||0} · 章节: ${d.stats?.total_chapters||0} · 总字数: ${d.stats?.total_words||0}</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">⚠️ 危险操作</div>
+        <div class="ss-danger" style="padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px">
+          <button class="btn btn-danger btn-sm" onclick="if(confirm('确定删除「${d.title}」？\\n\\n此操作不可恢复。')){deleteCurrentStory()}" style="background:#fef2f2;color:#ef4444;border:1px solid #fecaca">🗑️ 删除此作品</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('modal-settings').classList.add('show');
+  });
+}
+function closeSettings(){
+  document.getElementById('modal-settings').classList.remove('show');
+}
+function saveSettings(){
+  if(!sid)return;
+  const focused=document.getElementById('set-focused')?.checked;
+  const title=document.getElementById('set-title')?.value.trim();
+  const genre=document.getElementById('set-genre')?.value.trim();
+  const tone=document.getElementById('set-tone')?.value.trim();
+  const promises=[];
+  if(focused!==undefined){
+    const curFocused=document.getElementById('set-focused-status');
+    if(curFocused) curFocused.textContent=focused?'已开启':'已关闭';
+  }
+  promises.push(api('/api/story/'+sid+'/settings','POST',{title,genre,tone}));
+  promises.push(api('/api/story/'+sid+'/focus','POST'));
+  Promise.all(promises).then(()=>{
+    refresh();
+    document.getElementById('set-focused-status').textContent=
+      document.getElementById('set-focused')?.checked?'已开启':'已关闭';
+  });
+}
+function deleteCurrentStory(){
+  if(!sid)return;
+  const title=document.getElementById('set-title')?.value||'当前作品';
+  if(!confirm(`确定删除「${title}」？\n\n此操作不可恢复。`))return;
+  fetch('/api/story/'+sid,{method:'DELETE'}).then(r=>r.json()).then(d=>{
+    if(d.status==='ok'){
+      closeSettings();
+      resetAll();
+    }else alert('删除失败');
+  });
+}
 
 // ====== Create ======
 function createStory(){
@@ -825,6 +1093,8 @@ function refreshStoryInfo(){
 }
 function startWriting(){
   document.getElementById('step-create').style.display='none';
+  document.getElementById('home-nav').classList.remove('show');
+  document.getElementById('workspace-empty').classList.remove('show');
   document.getElementById('sbar').classList.add('show');
   document.getElementById('workspace').classList.add('show');
   refresh().then(()=>{
@@ -835,8 +1105,11 @@ function startWriting(){
 }
 function resetAll(){
   sid=null;cid=null;lastGen='';rpDraftId=null;rpBeatId=null;
+  document.getElementById('home-nav').classList.add('show');
+  switchHomeNav('new');
   document.getElementById('sbar').classList.remove('show');
   document.getElementById('workspace').classList.remove('show');
+  document.getElementById('workspace-empty').classList.add('show');
   document.getElementById('step-create').style.display='flex';
   document.querySelector('#new-story-body').style.display='';
   document.getElementById('raw-input').style.display='';
@@ -860,23 +1133,9 @@ function toggleNewStory(){
 // ====== Saved Stories ======
 function loadSavedStories(){
   fetch('/api/stories').then(r=>r.json()).then(d=>{
-    const el=document.getElementById('saved-list');
-    const stories=d.stories||[];
-    if(!stories.length){
-      el.innerHTML='<div style="text-align:center;padding:16px 0;color:var(--text-muted);font-size:13px"><div style="font-size:28px;margin-bottom:4px;opacity:.4">📚</div>还没有保存的作品，创建一个吧 ✍️</div>';
-      return;
-    }
-    el.innerHTML=stories.map(s=>`
-      <div class="saved-item" onclick="continueStory('${s.id}')">
-        <span class="si-icon">📖</span>
-        <div class="si-info">
-          <div class="si-title"><strong>${s.title}</strong></div>
-          <div class="si-meta">${s.saved_at_str||''}${s.genre?' · '+s.genre:''}</div>
-        </div>
-        <span class="si-stats">${s.words||0}字 · ${s.chapters||0}章</span>
-        <button class="si-del" onclick="event.stopPropagation();deleteSavedStory('${s.id}','${s.title.replace(/'/g,"\\'")}')" title="删除">✕</button>
-      </div>
-    `).join('');
+    allStories=d.stories||[];
+    updateGenreOptions(allStories);
+    applyFilters();
   }).catch(()=>{
     document.getElementById('saved-list').innerHTML='<div style="font-size:12px;color:var(--text-muted)">无法加载</div>';
   });
@@ -885,7 +1144,7 @@ function continueStory(sid_){
   fetch('/api/story/'+sid_).then(r=>r.json()).then(d=>{
     if(d.detail){alert('故事不存在');return}
     sid=d.story_id;
-    document.getElementById('saved-stories').style.display='none';
+    document.getElementById('home-nav').classList.remove('show');
     startWriting();
   });
 }
@@ -919,11 +1178,14 @@ function updateBar(d){
   document.getElementById('sb-chars').textContent=(d.characters||[]).map(c=>(ri[c.role]||'👤')+c.name).join(' · ');
   const st=d.stats||{};
   document.getElementById('sb-stats').textContent=`${st.total_drafts||0}草·${st.total_beats||0}拍·${st.total_chapters||0}章·${st.total_words||0}字`;
-  // Update nav counts
   document.getElementById('nav-count-drafts').textContent=d.drafts?.length||0;
   document.getElementById('nav-count-beats').textContent=d.beats?.length||0;
   document.getElementById('nav-count-chapters').textContent=d.chapters?.length||0;
   document.getElementById('nav-count-characters').textContent=d.characters?.length||0;
+  // Focus indicator in topbar
+  const fb=document.getElementById('sbar-focus');
+  if(d.focused){fb.textContent='⭐';fb.style.opacity='1'}
+  else{fb.textContent='⭐';fb.style.opacity='.3'}
 }
 
 // ====== Draft Panel ======
