@@ -425,7 +425,7 @@ input,textarea{font-family:var(--font);color:var(--text)}
           <div id="new-story-body">
             <textarea id="raw-input" placeholder="把你脑中的故事写下来...&#10;&#10;可以是一段剧情、几个关键词、一个场景或角色设定&#10;怎么写都行，不用讲究格式"></textarea>
             <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-bottom:8px">
-              <input type="checkbox" id="create-test-tag" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent)"> 🧪 标记为测试作品
+              <input type="checkbox" id="create-test-tag" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent)"> 🧪 标记为测试（体裁设为「测试」）
             </label>
             <div class="create-actions">
               <button class="btn btn-primary" onclick="createStory()">✨ 帮我理清思路</button>
@@ -483,9 +483,6 @@ input,textarea{font-family:var(--font);color:var(--text)}
               </div>
               <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-soft);cursor:pointer;margin-bottom:4px">
                 <input type="checkbox" id="filter-focused-only" onchange="applyFilters()"> 仅看焦点
-              </label>
-              <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-soft);cursor:pointer;margin-bottom:4px;margin-left:12px">
-                <input type="checkbox" id="filter-test-only" onchange="applyFilters()"> 🧪 仅测试
               </label>
               <span style="flex:1"></span>
               <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--accent);cursor:pointer;margin-bottom:4px">
@@ -884,12 +881,10 @@ function applyFilters(){
   const genre=document.getElementById('filter-genre').value;
   const sort=document.getElementById('sort-mode').value;
   const onlyFocused=document.getElementById('filter-focused-only').checked;
-  const onlyTest=document.getElementById('filter-test-only').checked;
   let filtered=allStories.filter(s=>{
     if(q&&!s.title.toLowerCase().includes(q)) return false;
     if(genre&&s.genre!==genre) return false;
     if(onlyFocused&&!s.focused) return false;
-    if(onlyTest&&s.tag!=='test') return false;
     return true;
   });
   filtered.sort((a,b)=>{
@@ -917,10 +912,10 @@ function renderSavedList(stories){
   el.innerHTML=stories.map(s=>`
     <div class="saved-item" onclick="continueStory('${s.id}')">
       <input type="checkbox" class="si-cb" value="${s.id}" ${selectedStories.has(s.id)?'checked':''} onclick="event.stopPropagation();toggleSelectStory('${s.id}')">
-      <span class="si-icon">${s.focused?'⭐':s.tag==='test'?'🧪':'📖'}</span>
+      <span class="si-icon">${s.focused?'⭐':'📖'}</span>
       <div class="si-info">
-        <div class="si-title"><strong>${s.title}${s.tag==='test'?' <span style="font-size:10px;color:#a78bfa;font-weight:400">🧪</span>':''}</strong></div>
-        <div class="si-meta">${s.focused?'⭐ 焦点 · ':''}${s.tag==='test'?'🧪 测试 · ':''}${s.saved_at_str||''}${s.genre?' · '+s.genre:''}</div>
+        <div class="si-title"><strong>${s.title}</strong></div>
+        <div class="si-meta">${s.focused?'⭐ 焦点 · ':''}${s.saved_at_str||''}${s.genre?' · '+s.genre:''}</div>
       </div>
       <span class="si-stats">${s.words||0}字 · ${s.chapters||0}章</span>
       <button class="si-del" onclick="event.stopPropagation();deleteSavedStory('${s.id}','${s.title.replace(/'/g,"\\'")}')" title="删除">✕</button>

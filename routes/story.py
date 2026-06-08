@@ -23,8 +23,8 @@ def create_story(req: CreateReq):
     if not data:
         raise HTTPException(400, "无法理解你的想法")
     fw = build_framework(data)
-    if req.tag:
-        fw.tag = req.tag
+    if req.tag == "test":
+        fw.genre = "测试"
     sid = str(uuid.uuid4())[:8]
     # 不自动创建节拍和章节，把原始想法存为草稿
     fw.add_draft(title="原始想法", content=req.raw_text, source="user")
@@ -58,7 +58,6 @@ def list_stories():
                         "genre": d.get("genre", ""),
                         "tone": d.get("tone", ""),
                         "focused": d.get("focused", False),
-                        "tag": d.get("tag", ""),
                         "drafts": len(d.get("drafts", [])),
                         "beats": len(d.get("beats", [])),
                         "chapters": len(d.get("chapters", [])),

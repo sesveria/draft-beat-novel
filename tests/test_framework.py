@@ -17,25 +17,6 @@ from framework import StoryFramework, Chapter, DraftItem, Beat, Character, CHAPT
 
 class TestSerialization:
 
-    def test_roundtrip_tag_default(self, empty_fw):
-        assert empty_fw.tag == ""
-        data = empty_fw.to_dict()
-        assert data["tag"] == ""
-        fw2 = StoryFramework.from_dict(data)
-        assert fw2.tag == ""
-
-    def test_roundtrip_tag_test(self, fw_with_data):
-        fw_with_data.tag = "test"
-        data = fw_with_data.to_dict()
-        assert data["tag"] == "test"
-        fw2 = StoryFramework.from_dict(data)
-        assert fw2.tag == "test"
-
-    def test_tag_legacy_data(self):
-        data = {"title": "旧故事"}
-        fw = StoryFramework.from_dict(data)
-        assert fw.tag == ""
-
     """写入 → 读出 → 数据一致"""
 
     def test_roundtrip_basic(self, fw_with_data):
