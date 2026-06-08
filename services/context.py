@@ -46,7 +46,7 @@ def _char_dict(c):
 def _detail(sid, fw):
     return {
         "story_id": sid, "title": fw.title, "genre": fw.genre, "tone": fw.tone,
-        "focused": fw.focused,
+        "focused": fw.focused, "tag": fw.tag,
         "characters": [{"name": c.name, "role": c.role, "description": c.description, "goal": c.goal}
                        for c in fw.characters],
         "drafts": [{"id": d.id, "title": d.title, "content": d.content, "source": d.source,

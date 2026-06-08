@@ -75,6 +75,7 @@ class StoryFramework:
     genre: str = ""
     tone: str = ""
     focused: bool = False          # 焦点作品，首页置顶展示
+    tag: str = ""                  # 标签，如 "test" 标记测试数据
     characters: list = field(default_factory=list)
     drafts: list = field(default_factory=list)    # DraftItem[]
     beats: list = field(default_factory=list)     # Beat[]
@@ -183,7 +184,7 @@ class StoryFramework:
     def to_dict(self):
         return {
             "title": self.title, "genre": self.genre, "tone": self.tone,
-            "focused": self.focused,
+            "focused": self.focused, "tag": self.tag,
             "characters": [asdict(c) for c in self.characters],
             "drafts": [asdict(d) for d in self.drafts],
             "beats": [asdict(b) for b in self.beats],
@@ -193,7 +194,7 @@ class StoryFramework:
     @classmethod
     def from_dict(cls, d):
         fw = cls(title=d.get("title", ""), genre=d.get("genre", ""), tone=d.get("tone", ""),
-                 focused=d.get("focused", False))
+                 focused=d.get("focused", False), tag=d.get("tag", ""))
         fw.characters = [Character(**{k: v for k, v in c.items() if k in Character.__dataclass_fields__}) for c in d.get("characters", [])]
         for dd in d.get("drafts", []):
             fw.drafts.append(DraftItem(**{k: v for k, v in dd.items() if k in DraftItem.__dataclass_fields__}))

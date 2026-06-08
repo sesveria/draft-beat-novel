@@ -424,6 +424,9 @@ input,textarea{font-family:var(--font);color:var(--text)}
           </div>
           <div id="new-story-body">
             <textarea id="raw-input" placeholder="把你脑中的故事写下来...&#10;&#10;可以是一段剧情、几个关键词、一个场景或角色设定&#10;怎么写都行，不用讲究格式"></textarea>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-bottom:8px">
+              <input type="checkbox" id="create-test-tag" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent)"> 🧪 标记为测试作品
+            </label>
             <div class="create-actions">
               <button class="btn btn-primary" onclick="createStory()">✨ 帮我理清思路</button>
             </div>
@@ -479,7 +482,14 @@ input,textarea{font-family:var(--font);color:var(--text)}
                 </select>
               </div>
               <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-soft);cursor:pointer;margin-bottom:4px">
-                <input type="checkbox" id="filter-focused-only" onchange="applyFilters()"> 仅看焦点作品
+                <input type="checkbox" id="filter-focused-only" onchange="applyFilters()"> 仅看焦点
+              </label>
+              <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-soft);cursor:pointer;margin-bottom:4px;margin-left:12px">
+                <input type="checkbox" id="filter-test-only" onchange="applyFilters()"> 🧪 仅测试
+              </label>
+              <span style="flex:1"></span>
+              <label class="sb-checkbox" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--accent);cursor:pointer;margin-bottom:4px">
+                <input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this)"> 全选
               </label>
             </div>
             <div class="saved-list" id="saved-list"><span class="spin"></span> 加载中...</div>
@@ -858,7 +868,7 @@ function switchHomeNav(tab){
 }
 
 // ====== Search / Filter / Sort ======
-let searchTimer=null, allStories=[], selectedStories=new Set();
+let searchTimer=null, allStories=[], selectedStories=new Set(), currentFilteredStories=[];
 function searchDebounce(){
   clearTimeout(searchTimer);
   searchTimer=setTimeout(applyFilters, 300);
@@ -874,17 +884,16 @@ function applyFilters(){
   const genre=document.getElementById('filter-genre').value;
   const sort=document.getElementById('sort-mode').value;
   const onlyFocused=document.getElementById('filter-focused-only').checked;
+  const onlyTest=document.getElementById('filter-test-only').checked;
   let filtered=allStories.filter(s=>{
     if(q&&!s.title.toLowerCase().includes(q)) return false;
     if(genre&&s.genre!==genre) return false;
     if(onlyFocused&&!s.focused) return false;
+    if(onlyTest&&s.tag!=='test') return false;
     return true;
   });
-  // Sort: focused items always first
   filtered.sort((a,b)=>{
-    // Focused items always come first
     if(a.focused!==b.focused) return a.focused?-1:1;
-    // Secondary sort
     switch(sort){
       case 'mtime_desc': return (b.saved_at||0)-(a.saved_at||0);
       case 'mtime_asc': return (a.saved_at||0)-(b.saved_at||0);
@@ -895,6 +904,8 @@ function applyFilters(){
       default: return 0;
     }
   });
+  currentFilteredStories=filtered;
+  document.getElementById('select-all-cb').checked=false;
   renderSavedList(filtered);
 }
 function renderSavedList(stories){
@@ -906,15 +917,25 @@ function renderSavedList(stories){
   el.innerHTML=stories.map(s=>`
     <div class="saved-item" onclick="continueStory('${s.id}')">
       <input type="checkbox" class="si-cb" value="${s.id}" ${selectedStories.has(s.id)?'checked':''} onclick="event.stopPropagation();toggleSelectStory('${s.id}')">
-      <span class="si-icon">${s.focused?'⭐':'📖'}</span>
+      <span class="si-icon">${s.focused?'⭐':s.tag==='test'?'🧪':'📖'}</span>
       <div class="si-info">
-        <div class="si-title"><strong>${s.title}</strong></div>
-        <div class="si-meta">${s.focused?'⭐ 焦点 · ':''}${s.saved_at_str||''}${s.genre?' · '+s.genre:''}</div>
+        <div class="si-title"><strong>${s.title}${s.tag==='test'?' <span style="font-size:10px;color:#a78bfa;font-weight:400">🧪</span>':''}</strong></div>
+        <div class="si-meta">${s.focused?'⭐ 焦点 · ':''}${s.tag==='test'?'🧪 测试 · ':''}${s.saved_at_str||''}${s.genre?' · '+s.genre:''}</div>
       </div>
       <span class="si-stats">${s.words||0}字 · ${s.chapters||0}章</span>
       <button class="si-del" onclick="event.stopPropagation();deleteSavedStory('${s.id}','${s.title.replace(/'/g,"\\'")}')" title="删除">✕</button>
     </div>
   `).join('');
+  updateBatchBar();
+}
+// Select all / deselect all
+function toggleSelectAll(cb){
+  selectedStories.clear();
+  if(cb.checked){
+    currentFilteredStories.forEach(s=>selectedStories.add(s.id));
+  }
+  // Sync all checkboxes
+  document.querySelectorAll('#saved-list .si-cb').forEach(c=>{c.checked=selectedStories.has(c.value)});
   updateBatchBar();
 }
 // Batch operations
@@ -926,6 +947,9 @@ function toggleSelectStory(id){
     if(selectedStories.has(cb.value)) cb.checked=true;
     else cb.checked=false;
   });
+  // Update select-all checkbox state
+  const allSelected=currentFilteredStories.length>0&&currentFilteredStories.every(s=>selectedStories.has(s.id));
+  document.getElementById('select-all-cb').checked=allSelected;
   updateBatchBar();
 }
 function updateBatchBar(){
@@ -1053,7 +1077,7 @@ function createStory(){
   if(!raw)return alert('请写一些内容');
   const btn=document.querySelector('.create-actions .btn-primary');
   btn.innerHTML='<span class="spin"></span> 分析中...';btn.disabled=true;
-  api('/api/story/create','POST',{raw_text:raw}).then(d=>{
+  api('/api/story/create','POST',{raw_text:raw, tag:document.getElementById('create-test-tag').checked?'test':''}).then(d=>{
     btn.innerHTML='✨ 帮我理清思路';btn.disabled=false;
     if(d.error)return alert(d.error);
     sid=d.story_id;

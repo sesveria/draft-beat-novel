@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class CreateReq(BaseModel):
     raw_text: str
+    tag: str = ""
 
 
 class WriteReq(BaseModel):
