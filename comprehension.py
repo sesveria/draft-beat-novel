@@ -41,22 +41,137 @@ def understand_idea(raw_text):
 注意：
 1. characters 里的 goal 如果没有明确提到，可以写"待定"
 2. events 按照故事发展顺序排列
-3. questions 列出你对用户想法的疑问，比如角色关系不明确的地方"""
+3. questions 列出你对用户想法的疑问，比如角色关系不明确的地方
+4. questions 里的文字不要使用双引号，用【】代替引号
+"""
 
     result = call_llm(system_prompt, user_prompt, temperature=0.3)
-    
+
     try:
         # 提取 JSON（可能被 markdown 包裹）
         if "```json" in result:
             result = result.split("```json")[1].split("```")[0]
         elif "```" in result:
             result = result.split("```")[1].split("```")[0]
-        
+
+        # 修复 LLM 可能输出的智能引号 → 直引号
+        result = result.replace("\u201c", '"').replace("\u201d", '"')
+        result = result.replace("\u2018", "'").replace("\u2019", "'")
+
+        # 用括号匹配提取最外层 JSON 对象（鲁棒解析）
+        data = _robust_json_parse(result)
+        if data:
+            return data
+
+        # 最后尝试直接解析
         data = json.loads(result.strip())
         return data
     except (json.JSONDecodeError, KeyError, IndexError) as e:
         print(f"解析失败: {e}")
         print(f"原始响应: {result[:500]}")
+        return None
+
+
+def _robust_json_parse(text):
+    """鲁棒的 JSON 解析：通过括号匹配找到最外层 {}，再尝试解析"""
+    text = text.strip()
+    start = text.find("{")
+    if start < 0:
+        return None
+
+    # 括号匹配找到最外层对象
+    depth = 0
+    end = -1
+    for i in range(start, len(text)):
+        ch = text[i]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+
+    if end < 0:
+        return None
+
+    candidate = text[start:end]
+
+    # 尝试直接解析
+    try:
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        pass
+
+    # 移除 questions 字段再试（它是唯一可能含未转义引号的字段）
+    import re
+    cleaned = re.sub(r',?\s*"questions"\s*:\s*\[.*?\]', '', candidate, count=1, flags=re.DOTALL)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+
+    # 如果失败，尝试转义字符串中未转义的双引号
+    # 策略：逐字符处理，在字符串内部时，遇到未转义的双引号就转义
+    fixed = []
+    in_string = False
+    escape = False
+    for ch in candidate:
+        if escape:
+            fixed.append(ch)
+            escape = False
+            continue
+        if ch == "\\" and in_string:
+            fixed.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            # 切换字符串状态
+            in_string = not in_string
+            fixed.append(ch)
+            continue
+        if in_string and ch == "\n":
+            fixed.append("\\n")
+            continue
+        fixed.append(ch)
+
+    try:
+        return json.loads("".join(fixed))
+    except json.JSONDecodeError:
+        pass
+
+    # 如果还失败，尝试更暴力的方法：在字符串内部将未转义的引号替换为中文引号
+    result2 = []
+    i = 0
+    in_str = False
+    chars = list(candidate)
+    while i < len(chars):
+        ch = chars[i]
+        if ch == "\\":
+            result2.append(ch)
+            if i + 1 < len(chars):
+                result2.append(chars[i + 1])
+                i += 2
+            continue
+        if ch == '"':
+            result2.append(ch)
+            in_str = not in_str
+            i += 1
+            continue
+        if in_str and (ch == "'" or ch == "\\'"):
+            # 将字符串内部的单引号保留
+            result2.append(ch)
+            i += 1
+            continue
+        result2.append(ch)
+        i += 1
+
+    candidate2 = "".join(result2)
+    # 将字符串内部的未匹配引号替换为中文引号
+    # 这种简单粗暴的方法可能破坏结构，所以仅做最后尝试
+    try:
+        return json.loads(candidate2)
+    except json.JSONDecodeError:
         return None
 
 def present_understanding(data):
