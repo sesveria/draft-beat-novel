@@ -1,6 +1,7 @@
 """故事路由 — 创作、读取、精炼、追问"""
 import os
 import json
+import time
 
 from fastapi import APIRouter, HTTPException
 from services.storage import _fw, _save, active_stories, STORAGE_DIR
@@ -45,17 +46,37 @@ def list_stories():
         for f in sorted(os.listdir(STORAGE_DIR), reverse=True):
             if f.endswith(".json"):
                 try:
-                    with open(os.path.join(STORAGE_DIR, f)) as fh:
+                    filepath = os.path.join(STORAGE_DIR, f)
+                    mtime = os.path.getmtime(filepath)
+                    with open(filepath) as fh:
                         d = json.load(fh)["framework"]
                     res.append({
                         "id": f.replace(".json", ""),
                         "title": d.get("title", "?"),
+                        "genre": d.get("genre", ""),
+                        "tone": d.get("tone", ""),
+                        "drafts": len(d.get("drafts", [])),
+                        "beats": len(d.get("beats", [])),
                         "chapters": len(d.get("chapters", [])),
                         "words": sum(len(c.get("prose", "")) for c in d.get("chapters", [])),
+                        "saved_at": mtime,
+                        "saved_at_str": time.strftime("%m-%d %H:%M", time.localtime(mtime)),
                     })
                 except Exception:
                     pass
     return {"stories": res}
+
+
+@router.delete("/api/story/{sid}")
+def delete_story(sid: str):
+    """删除已保存的故事"""
+    filepath = os.path.join(STORAGE_DIR, f"{sid}.json")
+    if not os.path.exists(filepath):
+        raise HTTPException(404, "故事不存在")
+    os.remove(filepath)
+    # 从内存缓存中移除
+    active_stories.pop(sid, None)
+    return {"status": "ok", "deleted": sid}
 
 
 @router.post("/api/story/{sid}/refine")

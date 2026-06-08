@@ -193,6 +193,14 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 </div>
 </div></div></div>
 
+<!-- ====== Saved Stories ====== -->
+<div id="saved-stories" style="max-width:560px;margin:10px auto 0">
+<div style="background:white;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+<div style="font-weight:600;margin-bottom:8px;font-size:13px">📚 继续已有作品</div>
+<div id="saved-list"><span class="spin"></span> 加载中...</div>
+</div>
+</div>
+
 <!-- ====== Story Bar ====== -->
 <div class="story-bar" id="sbar">
 <span class="sb-title" id="sb-title"></span><span class="sb-badge" id="sb-genre"></span>
@@ -531,6 +539,51 @@ function resetAll(){
   document.querySelector('#step-create .btn-gap').style.display='';
   document.getElementById('confirm-area').classList.add('hidden');
   document.getElementById('refine-area').classList.add('hidden');
+  document.getElementById('saved-stories').style.display='block';
+  loadSavedStories();
+}
+
+// ====== Saved Stories ======
+function loadSavedStories(){
+  fetch('/api/stories').then(r=>r.json()).then(d=>{
+    const el=document.getElementById('saved-list');
+    const stories=d.stories||[];
+    if(!stories.length){
+      el.innerHTML='<div style="font-size:12px;color:#bbb;padding:6px 0">还没有保存的作品，创建一个吧 ✍️</div>';
+      return;
+    }
+    el.innerHTML=stories.map(s=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 6px;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="continueStory('${s.id}')">
+        <span style="font-size:11px;color:#888;flex-shrink:0">${s.saved_at_str||''}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong>${s.title}</strong>
+          ${s.genre?`<span style="font-size:10px;color:#888">·${s.genre}</span>`:''}
+        </span>
+        <span style="font-size:10px;color:#999;flex-shrink:0">${s.words||0}字 · ${s.chapters||0}章</span>
+        <button class="btn btn-xs btn-s" onclick="event.stopPropagation();deleteSavedStory('${s.id}','${s.title.replace(/'/g,"\\'")}')" style="color:#ef4444;border-color:#fca5a5">🗑️</button>
+      </div>
+    `).join('');
+  }).catch(()=>{
+    document.getElementById('saved-list').innerHTML='<div style="font-size:12px;color:#999">无法加载</div>';
+  });
+}
+
+function continueStory(sid){
+  // Load existing story
+  fetch('/api/story/'+sid).then(r=>r.json()).then(d=>{
+    if(d.detail){alert('故事不存在');return}
+    sid=d.story_id;
+    document.getElementById('saved-stories').style.display='none';
+    startWriting();
+  });
+}
+
+function deleteSavedStory(sid, title){
+  if(!confirm(`确定删除「${title}」？\n\n此操作不可恢复。`))return;
+  fetch('/api/story/'+sid,{method:'DELETE'}).then(r=>r.json()).then(d=>{
+    if(d.status==='ok'){
+      loadSavedStories();
+    }else alert('删除失败');
+  });
 }
 
 // ====== Tab ======
@@ -1226,4 +1279,7 @@ function cancelCharEdit(){
 
 // ====== Utils ======
 function closeModal(id){document.getElementById(id).classList.remove('show')}
+
+// 页面加载时显示已有作品列表
+loadSavedStories();
 </script></body></html>
