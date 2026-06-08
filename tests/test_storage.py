@@ -1,4 +1,7 @@
-"""持久化测试 — services/storage.py"""
+"""持久化测试 — services/storage.py
+
+所有持久化到磁盘的测试数据均使用 genre="测试" 标记。
+"""
 
 import pytest
 import os
@@ -7,21 +10,27 @@ import json
 from services.storage import _save, _load, _fw, STORAGE_DIR
 
 
+def _save_test(fw, sid):
+    """以测试标记保存（设置 genre="测试"）"""
+    fw.genre = "测试"
+    _save(fw, sid)
+
+
 class TestSaveLoad:
 
     def test_save_and_load(self, empty_fw):
         sid = "test_save_load"
-        _save(empty_fw, sid)
+        _save_test(empty_fw, sid)
         loaded = _load(sid)
         assert loaded is not None
         assert loaded.title == empty_fw.title
-        assert loaded.genre == empty_fw.genre
+        assert loaded.genre == "测试"
         # 清理
         os.remove(os.path.join(STORAGE_DIR, f"{sid}.json"))
 
     def test_save_and_load_with_data(self, fw_with_data, empty_fw):
         sid = "test_save_load_data"
-        _save(fw_with_data, sid)
+        _save_test(fw_with_data, sid)
         loaded = _load(sid)
         assert len(loaded.drafts) == len(fw_with_data.drafts)
         assert len(loaded.beats) == len(fw_with_data.beats)
@@ -37,12 +46,13 @@ class TestSaveLoad:
         filepath = os.path.join(STORAGE_DIR, f"{sid}.json")
         if os.path.exists(filepath):
             os.remove(filepath)
-        _save(empty_fw, sid)
+        _save_test(empty_fw, sid)
         assert os.path.exists(filepath)
         with open(filepath) as f:
             data = json.load(f)
             assert data["story_id"] == sid
             assert data["framework"]["title"] == empty_fw.title
+            assert data["framework"]["genre"] == "测试"
         os.remove(filepath)
 
 
@@ -50,7 +60,7 @@ class TestFrameworkCache:
 
     def test_fw_caches_in_memory(self, empty_fw):
         sid = "test_cache"
-        _save(empty_fw, sid)
+        _save_test(empty_fw, sid)
         # 首次加载会缓存
         fw1 = _fw(sid)
         # 直接从缓存返回
@@ -66,7 +76,7 @@ class TestFrameworkCache:
 
     def test_fw_loads_from_disk_on_cache_miss(self, empty_fw):
         sid = "test_disk_load"
-        _save(empty_fw, sid)
+        _save_test(empty_fw, sid)
         from services.storage import active_stories
         active_stories.pop(sid, None)  # 清缓存
         fw = _fw(sid)

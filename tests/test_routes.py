@@ -1,4 +1,8 @@
-"""API 端点测试 — FastAPI TestClient"""
+"""API 端点测试 — FastAPI TestClient
+
+所有通过 API 创建的故事均标记为 tag=test，
+体裁会被后端强制设为「测试」，方便识别和清理。
+"""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,13 +12,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from routes import create_app
 
 client = TestClient(create_app())
+TEST_TAG = "test"
 
 
 class TestStoryEndpoints:
 
     def test_create_story(self):
         resp = client.post("/api/story/create", json={
-            "raw_text": "一个程序员捡到漂流瓶，决定寻找写信人的女儿"
+            "raw_text": "一个程序员捡到漂流瓶，决定寻找写信人的女儿",
+            "tag": TEST_TAG,
         })
         assert resp.status_code == 200
         data = resp.json()
@@ -32,7 +38,8 @@ class TestStoryEndpoints:
 
     def test_create_then_get(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试故事，专门用来验证获取端点"
+            "raw_text": "测试故事，专门用来验证获取端点",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         resp = client.get(f"/api/story/{sid}")
@@ -52,7 +59,8 @@ class TestStoryEndpoints:
 
     def test_delete_created_story(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "即将被删除的测试故事"
+            "raw_text": "即将被删除的测试故事",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         # Verify exists
@@ -73,7 +81,8 @@ class TestDraftEndpoints:
 
     def test_add_and_list_drafts(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试草稿功能"
+            "raw_text": "测试草稿功能",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
 
@@ -89,7 +98,8 @@ class TestDraftEndpoints:
 
     def test_update_draft(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试更新草稿"
+            "raw_text": "测试更新草稿",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         drafts = client.get(f"/api/story/{sid}/drafts").json()["drafts"]
@@ -106,7 +116,8 @@ class TestDraftEndpoints:
 
     def test_delete_draft(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试删除草稿"
+            "raw_text": "测试删除草稿",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         # Add a draft
@@ -124,7 +135,8 @@ class TestBeatEndpoints:
 
     def test_create_beat(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试节拍功能"
+            "raw_text": "测试节拍功能",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
 
@@ -136,7 +148,8 @@ class TestBeatEndpoints:
 
     def test_delete_beat(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试删除节拍"
+            "raw_text": "测试删除节拍",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         add = client.post(f"/api/story/{sid}/beats", json={"title": "待删除"})
@@ -150,7 +163,8 @@ class TestChapterEndpoints:
 
     def test_create_chapter(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试章节功能"
+            "raw_text": "测试章节功能",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
 
@@ -162,7 +176,8 @@ class TestChapterEndpoints:
 
     def test_stage_advance(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试阶段推进"
+            "raw_text": "测试阶段推进",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         ch = client.post(f"/api/story/{sid}/chapters", json={"title": "章节"}).json()
@@ -177,7 +192,8 @@ class TestCharacterEndpoints:
 
     def test_add_character(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试角色功能"
+            "raw_text": "测试角色功能",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
 
@@ -192,7 +208,8 @@ class TestCharacterEndpoints:
 
     def test_delete_character(self):
         create = client.post("/api/story/create", json={
-            "raw_text": "测试删除角色"
+            "raw_text": "测试删除角色",
+            "tag": TEST_TAG,
         })
         sid = create.json()["story_id"]
         client.post(f"/api/story/{sid}/characters", json={"name": "待删除"})
