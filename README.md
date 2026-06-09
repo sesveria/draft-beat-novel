@@ -24,10 +24,10 @@ python3 web_app.py
 # 5. 打开浏览器 → http://localhost:8888
 ```
 
-### 使用 Hermes 启动脚本
+### 使用启动脚本
 
 ```bash
-# 自动加载 .env 中的 API 密钥
+# 自动加载 .env 中的 API 密钥，省去手动 export
 bash start_server.sh
 ```
 
